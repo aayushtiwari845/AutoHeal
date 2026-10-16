@@ -1,0 +1,1196 @@
+{
+  "id": "8b85c1b6d8674047",
+  "status": "succeeded",
+  "phase": "done",
+  "phase_status": "complete",
+  "task": "DATA is a list of text documents. Tokenize using only contiguous ASCII letters A-Z or a-z, and lowercase each token. Output exactly one JSON object with document_count, token_count, unique_tokens, frequencies (all lowercase token counts), and top_tokens (up to 3 objects with token and count). Rank by count descending, then token ascending for ties.",
+  "preset_id": "text",
+  "mode": "replay",
+  "provider": "ollama",
+  "model": "scripted-replay",
+  "control_mode": "auto",
+  "max_attempts": 5,
+  "timeout": 5,
+  "seed_failure": true,
+  "trace_execution": true,
+  "input_data": [
+    "AI heals code. Code helps AI!",
+    "Reliable code, reliable results.",
+    "AI + tests = reliable code."
+  ],
+  "task_contract": {
+    "validation_kind": "semantic",
+    "expected_keys": [
+      "document_count",
+      "token_count",
+      "unique_tokens",
+      "frequencies",
+      "top_tokens"
+    ],
+    "rules": {
+      "document_count": "Count input documents, not words.",
+      "token_count": "Count all lowercase matches of [A-Za-z]+, including repeated tokens.",
+      "unique_tokens": "Count distinct lowercase tokens, not total occurrences.",
+      "frequencies": "Count every alphabetic token after lowercasing; punctuation is a separator.",
+      "top_tokens": "Rank by count descending and token ascending for ties; return at most three objects with token and count."
+    },
+    "description": "Independently checked against this preset's fixed reference."
+  },
+  "awaiting_step": false,
+  "next_phase": null,
+  "next_attempt": null,
+  "step_sequence": 7,
+  "step_token": null,
+  "attempts": [
+    {
+      "number": 1,
+      "code": "words = ' '.join(DATA).lowercase().split()\nprint(json.dumps({'token_count': len(words)}))",
+      "reflection": "Declared controlled fault. This first candidate is prewritten, not model generated.",
+      "status": "failed",
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"<temporary workspace>\\runner.py\", line 104, in <module>\n  File \"<generated>\", line 1, in <module>\nAttributeError: 'str' object has no attribute 'lowercase'",
+      "returncode": 1,
+      "duration_ms": 157,
+      "generation_ms": 0,
+      "generation_output": "",
+      "error": {
+        "type": "AttributeError",
+        "message": "'str' object has no attribute 'lowercase'",
+        "line": 1
+      },
+      "feedback": {
+        "attempt": 1,
+        "error": {
+          "type": "AttributeError",
+          "message": "'str' object has no attribute 'lowercase'",
+          "line": 1
+        },
+        "execution": {
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<temporary workspace>\\runner.py\", line 104, in <module>\n  File \"<generated>\", line 1, in <module>\nAttributeError: 'str' object has no attribute 'lowercase'",
+          "duration_ms": 157
+        },
+        "validation": {
+          "passed": false,
+          "kind": "execution",
+          "message": "Execution or JSON parsing failed.",
+          "mismatches": [],
+          "actual": null
+        },
+        "suggestion": "Correct the precise exception or semantic mismatch. Compute the result from DATA, respect all task rules, and print one JSON object. Return complete corrected Python source."
+      },
+      "validation": {
+        "passed": false,
+        "kind": "execution",
+        "message": "Execution or JSON parsing failed.",
+        "actual": null
+      },
+      "seeded": true,
+      "exec_steps": [
+        {
+          "line": 1,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 1,
+          "event": "exception",
+          "locals": {},
+          "exception": {
+            "type": "AttributeError",
+            "message": "'str' object has no attribute 'lowercase'"
+          }
+        }
+      ],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": true,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    },
+    {
+      "number": 2,
+      "code": "import re\nfrom collections import Counter\n\nwords = re.findall(r'[A-Za-z]+', ' '.join(DATA).lower())\ncounts = dict(Counter(words))\nranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:3]\n\nresult = {\n    'document_count': len(DATA),\n    'token_count': len(words),\n    'unique_tokens': len(counts),\n    'frequencies': counts,\n    'top_tokens': [\n        {'token': token, 'count': count}\n        for token, count in ranked\n    ],\n}\nprint(json.dumps(result, indent=2))",
+      "reflection": "Use lower() and alphabetic tokenization, then count and sort deterministically.",
+      "status": "success",
+      "stdout": "{\n  \"document_count\": 3,\n  \"token_count\": 14,\n  \"unique_tokens\": 7,\n  \"frequencies\": {\n    \"ai\": 3,\n    \"heals\": 1,\n    \"code\": 4,\n    \"helps\": 1,\n    \"reliable\": 3,\n    \"results\": 1,\n    \"tests\": 1\n  },\n  \"top_tokens\": [\n    {\n      \"token\": \"code\",\n      \"count\": 4\n    },\n    {\n      \"token\": \"ai\",\n      \"count\": 3\n    },\n    {\n      \"token\": \"reliable\",\n      \"count\": 3\n    }\n  ]\n}",
+      "stderr": "",
+      "returncode": 0,
+      "duration_ms": 172,
+      "generation_ms": 0,
+      "generation_output": "",
+      "error": null,
+      "feedback": null,
+      "validation": {
+        "passed": true,
+        "kind": "semantic",
+        "message": "All expected fields and values match the independent reference.",
+        "mismatches": [],
+        "expected": {
+          "document_count": 3,
+          "token_count": 14,
+          "unique_tokens": 7,
+          "frequencies": {
+            "ai": 3,
+            "heals": 1,
+            "code": 4,
+            "helps": 1,
+            "reliable": 3,
+            "results": 1,
+            "tests": 1
+          },
+          "top_tokens": [
+            {
+              "token": "code",
+              "count": 4
+            },
+            {
+              "token": "ai",
+              "count": 3
+            },
+            {
+              "token": "reliable",
+              "count": 3
+            }
+          ]
+        },
+        "actual": {
+          "document_count": 3,
+          "token_count": 14,
+          "unique_tokens": 7,
+          "frequencies": {
+            "ai": 3,
+            "heals": 1,
+            "code": 4,
+            "helps": 1,
+            "reliable": 3,
+            "results": 1,
+            "tests": 1
+          },
+          "top_tokens": [
+            {
+              "token": "code",
+              "count": 4
+            },
+            {
+              "token": "ai",
+              "count": 3
+            },
+            {
+              "token": "reliable",
+              "count": 3
+            }
+          ]
+        }
+      },
+      "seeded": false,
+      "exec_steps": [
+        {
+          "line": 1,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ]
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            }
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "item": [
+              "ai",
+              3
+            ]
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "item": [
+              "heals",
+              1
+            ]
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "item": [
+              "code",
+              4
+            ]
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "item": [
+              "helps",
+              1
+            ]
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "item": [
+              "reliable",
+              3
+            ]
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "item": [
+              "results",
+              1
+            ]
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "item": [
+              "tests",
+              1
+            ]
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ],
+            "token": "code",
+            "count": 4
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ],
+            "token": "code",
+            "count": 4
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ],
+            "token": "ai",
+            "count": 3
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ],
+            "token": "ai",
+            "count": 3
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ],
+            "token": "reliable",
+            "count": 3
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ],
+            "token": "reliable",
+            "count": 3
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ],
+            "token": "reliable",
+            "count": 3
+          }
+        },
+        {
+          "line": 8,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ]
+          }
+        },
+        {
+          "line": 18,
+          "event": "line",
+          "locals": {
+            "words": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "counts": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "ranked": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ]
+            ],
+            "result": {
+              "document_count": 3,
+              "token_count": 14,
+              "unique_tokens": 7,
+              "frequencies": {
+                "ai": 3,
+                "heals": 1,
+                "code": 4,
+                "helps": 1,
+                "reliable": 3,
+                "results": 1,
+                "<items omitted>": true
+              },
+              "top_tokens": [
+                "<maximum depth>",
+                "<maximum depth>",
+                "<maximum depth>"
+              ]
+            }
+          }
+        }
+      ],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": true,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    }
+  ],
+  "events": [
+    {
+      "phase": "generate",
+      "message": "Loading the declared controlled first failure.",
+      "time": "2026-10-16T16:34:21.310+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 1
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:34:21.310+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 2
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:34:21.310+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 3
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:34:21.467+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 4
+    },
+    {
+      "phase": "evaluate",
+      "message": "Checking the independent preset reference.",
+      "time": "2026-10-16T16:34:21.467+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 5
+    },
+    {
+      "phase": "evaluate",
+      "message": "Execution or JSON parsing failed.",
+      "time": "2026-10-16T16:34:21.467+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 6
+    },
+    {
+      "phase": "reflect",
+      "message": "Preparing concise execution and contract feedback for the next candidate.",
+      "time": "2026-10-16T16:34:21.467+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 7
+    },
+    {
+      "phase": "reflect",
+      "message": "Failure evidence prepared: AttributeError on line 1: 'str' object has no attribute 'lowercase'",
+      "time": "2026-10-16T16:34:21.467+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 8
+    },
+    {
+      "phase": "generate",
+      "message": "Generating a repaired candidate.",
+      "time": "2026-10-16T16:34:21.467+00:00",
+      "attempt": 2,
+      "kind": "stage_started",
+      "sequence": 9
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:34:21.467+00:00",
+      "attempt": 2,
+      "kind": "stage_completed",
+      "sequence": 10
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:34:21.467+00:00",
+      "attempt": 2,
+      "kind": "stage_started",
+      "sequence": 11
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:34:21.644+00:00",
+      "attempt": 2,
+      "kind": "stage_completed",
+      "sequence": 12
+    },
+    {
+      "phase": "evaluate",
+      "message": "Checking the independent preset reference.",
+      "time": "2026-10-16T16:34:21.644+00:00",
+      "attempt": 2,
+      "kind": "stage_started",
+      "sequence": 13
+    },
+    {
+      "phase": "evaluate",
+      "message": "All expected fields and values match the independent reference.",
+      "time": "2026-10-16T16:34:21.644+00:00",
+      "attempt": 2,
+      "kind": "stage_completed",
+      "sequence": 14
+    },
+    {
+      "phase": "done",
+      "message": "Validation passed. The loop stopped immediately.",
+      "time": "2026-10-16T16:34:21.644+00:00",
+      "attempt": 2,
+      "kind": "phase",
+      "sequence": 15
+    }
+  ],
+  "stage_history": [
+    {
+      "sequence": 1,
+      "phase": "generate",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:21.310+00:00",
+      "started_at": "2026-10-16T16:34:21.310+00:00",
+      "finished_at": "2026-10-16T16:34:21.310+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 2,
+      "phase": "execute",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:21.310+00:00",
+      "started_at": "2026-10-16T16:34:21.310+00:00",
+      "finished_at": "2026-10-16T16:34:21.467+00:00",
+      "duration_ms": 172
+    },
+    {
+      "sequence": 3,
+      "phase": "evaluate",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:21.467+00:00",
+      "started_at": "2026-10-16T16:34:21.467+00:00",
+      "finished_at": "2026-10-16T16:34:21.467+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 4,
+      "phase": "reflect",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:21.467+00:00",
+      "started_at": "2026-10-16T16:34:21.467+00:00",
+      "finished_at": "2026-10-16T16:34:21.467+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 5,
+      "phase": "generate",
+      "attempt": 2,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:21.467+00:00",
+      "started_at": "2026-10-16T16:34:21.467+00:00",
+      "finished_at": "2026-10-16T16:34:21.467+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 6,
+      "phase": "execute",
+      "attempt": 2,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:21.467+00:00",
+      "started_at": "2026-10-16T16:34:21.467+00:00",
+      "finished_at": "2026-10-16T16:34:21.644+00:00",
+      "duration_ms": 172
+    },
+    {
+      "sequence": 7,
+      "phase": "evaluate",
+      "attempt": 2,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:21.644+00:00",
+      "started_at": "2026-10-16T16:34:21.644+00:00",
+      "finished_at": "2026-10-16T16:34:21.644+00:00",
+      "duration_ms": 0
+    }
+  ],
+  "generation_output": "",
+  "result": {
+    "document_count": 3,
+    "token_count": 14,
+    "unique_tokens": 7,
+    "frequencies": {
+      "ai": 3,
+      "heals": 1,
+      "code": 4,
+      "helps": 1,
+      "reliable": 3,
+      "results": 1,
+      "tests": 1
+    },
+    "top_tokens": [
+      {
+        "token": "code",
+        "count": 4
+      },
+      {
+        "token": "ai",
+        "count": 3
+      },
+      {
+        "token": "reliable",
+        "count": 3
+      }
+    ]
+  },
+  "started_at": "2026-10-16T16:34:21.310+00:00",
+  "finished_at": "2026-10-16T16:34:21.644+00:00",
+  "metrics": {
+    "attempts": 2,
+    "repairs": 1,
+    "passed": true,
+    "duration_ms": 344,
+    "generation_ms": 0,
+    "execution_ms": 329,
+    "waiting_ms": 0
+  },
+  "validation_kind": "semantic",
+  "notice": "Scripted replay uses predetermined programs; execution observations are real, model generation is not performed."
+}

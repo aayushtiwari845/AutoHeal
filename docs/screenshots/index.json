@@ -1,0 +1,133 @@
+{
+  "screenshots": {
+    "overview": {
+      "file": "docs/screenshots/01-workbench-overview.png",
+      "caption": "The complete Windows 95-inspired workbench, ready before a run.",
+      "observation": "Task contract, input DATA, provider and control settings, labelled prewritten Python sample, process output and result-check panels are visible. No model call or execution has occurred.",
+      "run_id": null,
+      "mode": "ready",
+      "provider": null,
+      "control_mode": null,
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "manual_candidate": {
+      "file": "docs/screenshots/02-manual-candidate.png",
+      "caption": "Step-through mode: the labelled controlled-fault candidate is ready before execution.",
+      "observation": "Grade replay attempt 1 is prewritten. The source calculates an unweighted average and has not executed at this paused boundary.",
+      "run_id": "0009c90c068f40df",
+      "mode": "replay",
+      "provider": "ollama",
+      "control_mode": "manual",
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "semantic_failure": {
+      "file": "docs/screenshots/03-semantic-check-failure.png",
+      "caption": "A zero exit code can still produce an incorrect answer.",
+      "observation": "Grade attempt 1 ran successfully but failed independent weighted-result checks; field-level expected and actual values are shown.",
+      "run_id": "0009c90c068f40df",
+      "mode": "replay",
+      "provider": "ollama",
+      "control_mode": "manual",
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "reflection": {
+      "file": "docs/screenshots/04-structured-repair-feedback.png",
+      "caption": "Structured failure evidence is ready for the next candidate.",
+      "observation": "The completed Reflect stage stores actual wrong result fields and corrective constraints. This scripted run uses fixed replacement source and makes no AI call. The scrollable JSON view is shown at its start.",
+      "run_id": "0009c90c068f40df",
+      "mode": "replay",
+      "provider": "ollama",
+      "control_mode": "manual",
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "repaired_candidate": {
+      "file": "docs/screenshots/05-repaired-source.png",
+      "caption": "The second scripted candidate uses weighted scores and explicit result construction.",
+      "observation": "The replacement is fixed replay source, paused before Python execution. It uses the original DATA and does not substitute a reference answer.",
+      "run_id": "0009c90c068f40df",
+      "mode": "replay",
+      "provider": "ollama",
+      "control_mode": "manual",
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "diff": {
+      "file": "docs/screenshots/06-source-changes.png",
+      "caption": "The Changes view compares the actual first and second candidate sources.",
+      "observation": "Added and removed lines are computed from stored source using an LCS comparison; code remains selectable with true source line numbers.",
+      "run_id": "0009c90c068f40df",
+      "mode": "replay",
+      "provider": "ollama",
+      "control_mode": "manual",
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "validation": {
+      "file": "docs/screenshots/07-independent-validation.png",
+      "caption": "Grade replay terminates after the independent reference checks pass.",
+      "observation": "All fixed-preset result fields pass. The displayed final JSON is the program output, and the loop stops at attempt 2.",
+      "run_id": "0009c90c068f40df",
+      "mode": "replay",
+      "provider": "ollama",
+      "control_mode": "manual",
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "trace": {
+      "file": "docs/screenshots/08-captured-python-locals.png",
+      "caption": "Captured Python line events show source location and bounded local-variable snapshots.",
+      "observation": "These are actual CPython observations recorded before each selected line, replayed after execution. They are not a live line debugger.",
+      "run_id": "0009c90c068f40df",
+      "mode": "replay",
+      "provider": "ollama",
+      "control_mode": "manual",
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "export": {
+      "file": "docs/screenshots/09-actual-trace-json.png",
+      "caption": "The exported run is machine-readable JSON with exact input, candidates, execution and stage evidence.",
+      "observation": "The dashboard Export trace button downloaded this same run; its ID was checked against the current run. The browser view shows the real API snapshot, with no manufactured fields.",
+      "run_id": "0009c90c068f40df",
+      "mode": "replay",
+      "control_mode": "manual",
+      "redaction": "No credentials; fixed teaching data."
+    },
+    "execution_failure": {
+      "file": "docs/screenshots/10-runtime-traceback.png",
+      "caption": "A separate sales replay demonstrates a real Python exception and traceback.",
+      "observation": "Attempt 1 sums raw string amounts using sum, whose starting value is numeric zero. Python exits with a TypeError; stdout, stderr, exit code and elapsed process time are captured.",
+      "run_id": "6ed469bb36e74891",
+      "mode": "replay",
+      "provider": "ollama",
+      "control_mode": "manual",
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "automatic": {
+      "file": "docs/screenshots/11-automatic-event-history.png",
+      "caption": "Automatic replay advances through the recorded stages and stops after successful validation.",
+      "observation": "Text replay executes a failing source and a corrected source without manual stepping. The event history records actual Generate, Execute, Evaluate and Reflect stage transitions.",
+      "run_id": "55962968b9884e6e",
+      "mode": "replay",
+      "provider": "ollama",
+      "control_mode": "auto",
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "authors": {
+      "file": "docs/screenshots/12-project-credits.png",
+      "caption": "Joint laboratory submission and explanation of the two demonstration modes.",
+      "observation": "Both student names, roll numbers and divisions appear in the About view. Live and replay modes are explained separately.",
+      "run_id": null,
+      "mode": "ready",
+      "provider": null,
+      "control_mode": null,
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    },
+    "live_repair": {
+      "file": "docs/screenshots/13-live-ollama-candidate.png",
+      "caption": "A live Ollama repair is paused before execution in the same step-through interface.",
+      "observation": "Unlike the scripted walkthrough, this candidate was actually generated by the selected local model from the controlled grade fault and its failed result checks. The source header identifies it as model-generated Python. The captured state precedes its execution.",
+      "run_id": "975559378fca4598",
+      "mode": "live",
+      "provider": "ollama",
+      "control_mode": "manual",
+      "redaction": "No credentials or private data appear. Fixed teaching datasets only."
+    }
+  }
+}

@@ -1,0 +1,1648 @@
+{
+  "id": "b946d786bef940ab",
+  "status": "succeeded",
+  "phase": "done",
+  "phase_status": "complete",
+  "task": "DATA is a list of students, each with name and 3 scores. Weights for the 3 scores are 0.2, 0.3, 0.5. Compute weighted averages rounded to 2 decimals. Passing means average >= 60. Output a single JSON object with averages (mapping names to average), class_average (2 decimals, computed from unrounded individual averages), passed (alphabetically sorted names), and highest (the name whose unrounded weighted average is greatest; choose the alphabetically first name only when the greatest scores tie). DATA is already defined; compute all outputs from it without redefining or copying the dataset into source.",
+  "preset_id": "grades",
+  "mode": "live",
+  "provider": "ollama",
+  "model": "qwen2.5-coder:7b",
+  "control_mode": "manual",
+  "max_attempts": 5,
+  "timeout": 5,
+  "seed_failure": true,
+  "trace_execution": true,
+  "input_data": [
+    {
+      "name": "Asha",
+      "scores": [
+        80,
+        90,
+        70
+      ]
+    },
+    {
+      "name": "Kabir",
+      "scores": [
+        60,
+        75,
+        85
+      ]
+    },
+    {
+      "name": "Mira",
+      "scores": [
+        95,
+        92,
+        98
+      ]
+    },
+    {
+      "name": "Dev",
+      "scores": [
+        45,
+        55,
+        50
+      ]
+    }
+  ],
+  "task_contract": {
+    "validation_kind": "semantic",
+    "expected_keys": [
+      "averages",
+      "class_average",
+      "passed",
+      "highest"
+    ],
+    "rules": {
+      "averages": "Use weights 0.2, 0.3, 0.5 in score order, then round individual values to two decimals.",
+      "class_average": "Average the UNROUNDED weighted values, then round the class result to two decimals.",
+      "passed": "Include students with weighted score >= 60; sort names alphabetically.",
+      "highest": "Choose the name with the GREATEST unrounded weighted score. Alphabetical order breaks only a tie at the greatest score."
+    },
+    "description": "Independently checked against this preset's fixed reference."
+  },
+  "awaiting_step": false,
+  "next_phase": null,
+  "next_attempt": null,
+  "step_sequence": 7,
+  "step_token": null,
+  "attempts": [
+    {
+      "number": 1,
+      "code": "# Controlled fault: this uses a simple mean instead of assessment weights.\naverages = {}\nfor student in DATA:\n    scores = student['scores']\n    averages[student['name']] = round(sum(scores) / 3, 2)\n\nresult = {\n    'averages': averages,\n    'class_average': round(sum(averages.values()) / len(averages), 2),\n    'passed': sorted(name for name, value in averages.items() if value >= 60),\n    'highest': max(averages, key=averages.get),\n}\nprint(json.dumps(result, indent=2))",
+      "reflection": "Declared controlled fault. This first candidate is prewritten, not model generated.",
+      "status": "failed",
+      "stdout": "{\n  \"averages\": {\n    \"Asha\": 80.0,\n    \"Kabir\": 73.33,\n    \"Mira\": 95.0,\n    \"Dev\": 50.0\n  },\n  \"class_average\": 74.58,\n  \"passed\": [\n    \"Asha\",\n    \"Kabir\",\n    \"Mira\"\n  ],\n  \"highest\": \"Mira\"\n}",
+      "stderr": "",
+      "returncode": 0,
+      "duration_ms": 141,
+      "generation_ms": 0,
+      "generation_output": "",
+      "error": {
+        "type": "ValidationError",
+        "message": "Output violates the task contract at $.averages.Asha, $.averages.Dev, $.averages.Kabir, $.averages.Mira, $.class_average; recompute these fields from DATA and the stated rules.",
+        "line": null
+      },
+      "feedback": {
+        "attempt": 1,
+        "error": {
+          "type": "ValidationError",
+          "message": "Output violates the task contract at $.averages.Asha, $.averages.Dev, $.averages.Kabir, $.averages.Mira, $.class_average; recompute these fields from DATA and the stated rules.",
+          "line": null
+        },
+        "execution": {
+          "exit_code": 0,
+          "stdout": "{\n  \"averages\": {\n    \"Asha\": 80.0,\n    \"Kabir\": 73.33,\n    \"Mira\": 95.0,\n    \"Dev\": 50.0\n  },\n  \"class_average\": 74.58,\n  \"passed\": [\n    \"Asha\",\n    \"Kabir\",\n    \"Mira\"\n  ],\n  \"highest\": \"Mira\"\n}",
+          "stderr": "",
+          "duration_ms": 141
+        },
+        "validation": {
+          "passed": false,
+          "kind": "semantic",
+          "message": "Output violates the task contract at $.averages.Asha, $.averages.Dev, $.averages.Kabir, $.averages.Mira, $.class_average; recompute these fields from DATA and the stated rules.",
+          "mismatches": [
+            {
+              "path": "$.averages.Asha",
+              "issue": "value or type differs",
+              "expected_type": "number",
+              "actual_type": "number",
+              "rule": "Use weights 0.2, 0.3, 0.5 in score order, then round individual values to two decimals."
+            },
+            {
+              "path": "$.averages.Dev",
+              "issue": "value or type differs",
+              "expected_type": "number",
+              "actual_type": "number",
+              "rule": "Use weights 0.2, 0.3, 0.5 in score order, then round individual values to two decimals."
+            },
+            {
+              "path": "$.averages.Kabir",
+              "issue": "value or type differs",
+              "expected_type": "number",
+              "actual_type": "number",
+              "rule": "Use weights 0.2, 0.3, 0.5 in score order, then round individual values to two decimals."
+            },
+            {
+              "path": "$.averages.Mira",
+              "issue": "value or type differs",
+              "expected_type": "number",
+              "actual_type": "number",
+              "rule": "Use weights 0.2, 0.3, 0.5 in score order, then round individual values to two decimals."
+            },
+            {
+              "path": "$.class_average",
+              "issue": "value or type differs",
+              "expected_type": "number",
+              "actual_type": "number",
+              "rule": "Average the UNROUNDED weighted values, then round the class result to two decimals."
+            }
+          ],
+          "actual": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95,
+              "Dev": 50
+            },
+            "class_average": 74.58,
+            "passed": [
+              "Asha",
+              "Kabir",
+              "Mira"
+            ],
+            "highest": "Mira"
+          }
+        },
+        "suggestion": "Correct the precise exception or semantic mismatch. Compute the result from DATA, respect all task rules, and print one JSON object. Return complete corrected Python source."
+      },
+      "validation": {
+        "passed": false,
+        "kind": "semantic",
+        "message": "Output violates the task contract at $.averages.Asha, $.averages.Dev, $.averages.Kabir, $.averages.Mira, $.class_average; recompute these fields from DATA and the stated rules.",
+        "mismatches": [
+          {
+            "path": "$.averages.Asha",
+            "issue": "value or type differs",
+            "expected_type": "number",
+            "actual_type": "number",
+            "rule": "Use weights 0.2, 0.3, 0.5 in score order, then round individual values to two decimals."
+          },
+          {
+            "path": "$.averages.Dev",
+            "issue": "value or type differs",
+            "expected_type": "number",
+            "actual_type": "number",
+            "rule": "Use weights 0.2, 0.3, 0.5 in score order, then round individual values to two decimals."
+          },
+          {
+            "path": "$.averages.Kabir",
+            "issue": "value or type differs",
+            "expected_type": "number",
+            "actual_type": "number",
+            "rule": "Use weights 0.2, 0.3, 0.5 in score order, then round individual values to two decimals."
+          },
+          {
+            "path": "$.averages.Mira",
+            "issue": "value or type differs",
+            "expected_type": "number",
+            "actual_type": "number",
+            "rule": "Use weights 0.2, 0.3, 0.5 in score order, then round individual values to two decimals."
+          },
+          {
+            "path": "$.class_average",
+            "issue": "value or type differs",
+            "expected_type": "number",
+            "actual_type": "number",
+            "rule": "Average the UNROUNDED weighted values, then round the class result to two decimals."
+          }
+        ],
+        "expected": {
+          "averages": {
+            "Asha": 78,
+            "Kabir": 77,
+            "Mira": 95.6,
+            "Dev": 50.5
+          },
+          "class_average": 75.28,
+          "passed": [
+            "Asha",
+            "Kabir",
+            "Mira"
+          ],
+          "highest": "Mira"
+        },
+        "actual": {
+          "averages": {
+            "Asha": 80,
+            "Kabir": 73.33,
+            "Mira": 95,
+            "Dev": 50
+          },
+          "class_average": 74.58,
+          "passed": [
+            "Asha",
+            "Kabir",
+            "Mira"
+          ],
+          "highest": "Mira"
+        }
+      },
+      "seeded": true,
+      "exec_steps": [
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {
+            "averages": {}
+          }
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {
+            "averages": {},
+            "student": {
+              "name": "Asha",
+              "scores": [
+                80,
+                90,
+                70
+              ]
+            }
+          }
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {
+            "averages": {},
+            "student": {
+              "name": "Asha",
+              "scores": [
+                80,
+                90,
+                70
+              ]
+            },
+            "scores": [
+              80,
+              90,
+              70
+            ]
+          }
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80
+            },
+            "student": {
+              "name": "Asha",
+              "scores": [
+                80,
+                90,
+                70
+              ]
+            },
+            "scores": [
+              80,
+              90,
+              70
+            ]
+          }
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80
+            },
+            "student": {
+              "name": "Kabir",
+              "scores": [
+                60,
+                75,
+                85
+              ]
+            },
+            "scores": [
+              80,
+              90,
+              70
+            ]
+          }
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80
+            },
+            "student": {
+              "name": "Kabir",
+              "scores": [
+                60,
+                75,
+                85
+              ]
+            },
+            "scores": [
+              60,
+              75,
+              85
+            ]
+          }
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33
+            },
+            "student": {
+              "name": "Kabir",
+              "scores": [
+                60,
+                75,
+                85
+              ]
+            },
+            "scores": [
+              60,
+              75,
+              85
+            ]
+          }
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33
+            },
+            "student": {
+              "name": "Mira",
+              "scores": [
+                95,
+                92,
+                98
+              ]
+            },
+            "scores": [
+              60,
+              75,
+              85
+            ]
+          }
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33
+            },
+            "student": {
+              "name": "Mira",
+              "scores": [
+                95,
+                92,
+                98
+              ]
+            },
+            "scores": [
+              95,
+              92,
+              98
+            ]
+          }
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95
+            },
+            "student": {
+              "name": "Mira",
+              "scores": [
+                95,
+                92,
+                98
+              ]
+            },
+            "scores": [
+              95,
+              92,
+              98
+            ]
+          }
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              95,
+              92,
+              98
+            ]
+          }
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ]
+          }
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95,
+              "Dev": 50
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ]
+          }
+        },
+        {
+          "line": 8,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95,
+              "Dev": 50
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ]
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95,
+              "Dev": 50
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ]
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95,
+              "Dev": 50
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ]
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "name": "Asha",
+            "value": 80
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "name": "Kabir",
+            "value": 73.33
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "name": "Mira",
+            "value": 95
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "name": "Dev",
+            "value": 50
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95,
+              "Dev": 50
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ]
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95,
+              "Dev": 50
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ]
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 80,
+              "Kabir": 73.33,
+              "Mira": 95,
+              "Dev": 50
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ],
+            "result": {
+              "averages": {
+                "Asha": 80,
+                "Kabir": 73.33,
+                "Mira": 95,
+                "Dev": 50
+              },
+              "class_average": 74.58,
+              "passed": [
+                "Asha",
+                "Kabir",
+                "Mira"
+              ],
+              "highest": "Mira"
+            }
+          }
+        }
+      ],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": true,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    },
+    {
+      "number": 2,
+      "code": "averages = {}\nfor student in DATA:\n    scores = student['scores']\n    weighted_average = round(scores[0] * 0.2 + scores[1] * 0.3 + scores[2] * 0.5, 2)\n    averages[student['name']] = weighted_average\n\nresult = {\n    'averages': averages,\n    'class_average': round(sum(averages.values()) / len(averages), 2),\n    'passed': sorted(name for name, value in averages.items() if value >= 60),\n    'highest': max(averages, key=averages.get),\n}\nprint(json.dumps(result, indent=2))",
+      "reflection": "The previous code used an incorrect method to calculate weighted averages. It should multiply each score by its respective weight, sum these products, and then round the result to two decimal places.",
+      "status": "success",
+      "stdout": "{\n  \"averages\": {\n    \"Asha\": 78.0,\n    \"Kabir\": 77.0,\n    \"Mira\": 95.6,\n    \"Dev\": 50.5\n  },\n  \"class_average\": 75.28,\n  \"passed\": [\n    \"Asha\",\n    \"Kabir\",\n    \"Mira\"\n  ],\n  \"highest\": \"Mira\"\n}",
+      "stderr": "",
+      "returncode": 0,
+      "duration_ms": 156,
+      "generation_ms": 15406,
+      "generation_output": "{\"reflection\": \"The previous code used an incorrect method to calculate weighted averages. It should multiply each score by its respective weight, sum these products, and then round the result to two decimal places.\", \"code\": \"averages = {}\\nfor student in DATA:\\n    scores = student['scores']\\n    weighted_average = round(scores[0] * 0.2 + scores[1] * 0.3 + scores[2] * 0.5, 2)\\n    averages[student['name']] = weighted_average\\n\\nresult = {\\n    'averages': averages,\\n    'class_average': round(sum(averages.values()) / len(averages), 2),\\n    'passed': sorted(name for name, value in averages.items() if value >= 60),\\n    'highest': max(averages, key=averages.get),\\n}\\nprint(json.dumps(result, indent=2))\"}",
+      "error": null,
+      "feedback": null,
+      "validation": {
+        "passed": true,
+        "kind": "semantic",
+        "message": "All expected fields and values match the independent reference.",
+        "mismatches": [],
+        "expected": {
+          "averages": {
+            "Asha": 78,
+            "Kabir": 77,
+            "Mira": 95.6,
+            "Dev": 50.5
+          },
+          "class_average": 75.28,
+          "passed": [
+            "Asha",
+            "Kabir",
+            "Mira"
+          ],
+          "highest": "Mira"
+        },
+        "actual": {
+          "averages": {
+            "Asha": 78,
+            "Kabir": 77,
+            "Mira": 95.6,
+            "Dev": 50.5
+          },
+          "class_average": 75.28,
+          "passed": [
+            "Asha",
+            "Kabir",
+            "Mira"
+          ],
+          "highest": "Mira"
+        }
+      },
+      "seeded": false,
+      "exec_steps": [
+        {
+          "line": 1,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {
+            "averages": {}
+          }
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {
+            "averages": {},
+            "student": {
+              "name": "Asha",
+              "scores": [
+                80,
+                90,
+                70
+              ]
+            }
+          }
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {
+            "averages": {},
+            "student": {
+              "name": "Asha",
+              "scores": [
+                80,
+                90,
+                70
+              ]
+            },
+            "scores": [
+              80,
+              90,
+              70
+            ]
+          }
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {
+            "averages": {},
+            "student": {
+              "name": "Asha",
+              "scores": [
+                80,
+                90,
+                70
+              ]
+            },
+            "scores": [
+              80,
+              90,
+              70
+            ],
+            "weighted_average": 78
+          }
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78
+            },
+            "student": {
+              "name": "Asha",
+              "scores": [
+                80,
+                90,
+                70
+              ]
+            },
+            "scores": [
+              80,
+              90,
+              70
+            ],
+            "weighted_average": 78
+          }
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78
+            },
+            "student": {
+              "name": "Kabir",
+              "scores": [
+                60,
+                75,
+                85
+              ]
+            },
+            "scores": [
+              80,
+              90,
+              70
+            ],
+            "weighted_average": 78
+          }
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78
+            },
+            "student": {
+              "name": "Kabir",
+              "scores": [
+                60,
+                75,
+                85
+              ]
+            },
+            "scores": [
+              60,
+              75,
+              85
+            ],
+            "weighted_average": 78
+          }
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78
+            },
+            "student": {
+              "name": "Kabir",
+              "scores": [
+                60,
+                75,
+                85
+              ]
+            },
+            "scores": [
+              60,
+              75,
+              85
+            ],
+            "weighted_average": 77
+          }
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77
+            },
+            "student": {
+              "name": "Kabir",
+              "scores": [
+                60,
+                75,
+                85
+              ]
+            },
+            "scores": [
+              60,
+              75,
+              85
+            ],
+            "weighted_average": 77
+          }
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77
+            },
+            "student": {
+              "name": "Mira",
+              "scores": [
+                95,
+                92,
+                98
+              ]
+            },
+            "scores": [
+              60,
+              75,
+              85
+            ],
+            "weighted_average": 77
+          }
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77
+            },
+            "student": {
+              "name": "Mira",
+              "scores": [
+                95,
+                92,
+                98
+              ]
+            },
+            "scores": [
+              95,
+              92,
+              98
+            ],
+            "weighted_average": 77
+          }
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77
+            },
+            "student": {
+              "name": "Mira",
+              "scores": [
+                95,
+                92,
+                98
+              ]
+            },
+            "scores": [
+              95,
+              92,
+              98
+            ],
+            "weighted_average": 95.6
+          }
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6
+            },
+            "student": {
+              "name": "Mira",
+              "scores": [
+                95,
+                92,
+                98
+              ]
+            },
+            "scores": [
+              95,
+              92,
+              98
+            ],
+            "weighted_average": 95.6
+          }
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              95,
+              92,
+              98
+            ],
+            "weighted_average": 95.6
+          }
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ],
+            "weighted_average": 95.6
+          }
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ],
+            "weighted_average": 50.5
+          }
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6,
+              "Dev": 50.5
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ],
+            "weighted_average": 50.5
+          }
+        },
+        {
+          "line": 8,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6,
+              "Dev": 50.5
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ],
+            "weighted_average": 50.5
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6,
+              "Dev": 50.5
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ],
+            "weighted_average": 50.5
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6,
+              "Dev": 50.5
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ],
+            "weighted_average": 50.5
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "name": "Asha",
+            "value": 78
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "name": "Kabir",
+            "value": 77
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "name": "Mira",
+            "value": 95.6
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "name": "Dev",
+            "value": 50.5
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6,
+              "Dev": 50.5
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ],
+            "weighted_average": 50.5
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6,
+              "Dev": 50.5
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ],
+            "weighted_average": 50.5
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "averages": {
+              "Asha": 78,
+              "Kabir": 77,
+              "Mira": 95.6,
+              "Dev": 50.5
+            },
+            "student": {
+              "name": "Dev",
+              "scores": [
+                45,
+                55,
+                50
+              ]
+            },
+            "scores": [
+              45,
+              55,
+              50
+            ],
+            "weighted_average": 50.5,
+            "result": {
+              "averages": {
+                "Asha": 78,
+                "Kabir": 77,
+                "Mira": 95.6,
+                "Dev": 50.5
+              },
+              "class_average": 75.28,
+              "passed": [
+                "Asha",
+                "Kabir",
+                "Mira"
+              ],
+              "highest": "Mira"
+            }
+          }
+        }
+      ],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": true,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    }
+  ],
+  "events": [
+    {
+      "phase": "generate",
+      "message": "Ready for Next stage. Loading the declared controlled first failure.",
+      "time": "2026-10-16T16:43:55.211+00:00",
+      "attempt": 1,
+      "kind": "stage_ready",
+      "sequence": 1
+    },
+    {
+      "phase": "generate",
+      "message": "Loading the declared controlled first failure.",
+      "time": "2026-10-16T16:43:55.960+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 2
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:43:55.960+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 3
+    },
+    {
+      "phase": "execute",
+      "message": "Ready for Next stage. Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:43:55.960+00:00",
+      "attempt": 1,
+      "kind": "stage_ready",
+      "sequence": 4
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:43:56.697+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 5
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:43:56.840+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 6
+    },
+    {
+      "phase": "evaluate",
+      "message": "Ready for Next stage. Checking the independent preset reference.",
+      "time": "2026-10-16T16:43:56.840+00:00",
+      "attempt": 1,
+      "kind": "stage_ready",
+      "sequence": 7
+    },
+    {
+      "phase": "evaluate",
+      "message": "Checking the independent preset reference.",
+      "time": "2026-10-16T16:43:57.603+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 8
+    },
+    {
+      "phase": "evaluate",
+      "message": "Output violates the task contract at $.averages.Asha, $.averages.Dev, $.averages.Kabir, $.averages.Mira, $.class_average; recompute these fields from DATA and the stated rules.",
+      "time": "2026-10-16T16:43:57.603+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 9
+    },
+    {
+      "phase": "reflect",
+      "message": "Ready for Next stage. Preparing concise execution and contract feedback for the next candidate.",
+      "time": "2026-10-16T16:43:57.603+00:00",
+      "attempt": 1,
+      "kind": "stage_ready",
+      "sequence": 10
+    },
+    {
+      "phase": "reflect",
+      "message": "Preparing concise execution and contract feedback for the next candidate.",
+      "time": "2026-10-16T16:43:58.355+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 11
+    },
+    {
+      "phase": "reflect",
+      "message": "Failure evidence prepared: ValidationError: Output violates the task contract at $.averages.Asha, $.averages.Dev, $.averages.Kabir, $.averages.Mira, $.class_average; recompute these fields from DATA and the stated rules.",
+      "time": "2026-10-16T16:43:58.355+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 12
+    },
+    {
+      "phase": "generate",
+      "message": "Ready for Next stage. Generating a repaired candidate.",
+      "time": "2026-10-16T16:43:58.355+00:00",
+      "attempt": 2,
+      "kind": "stage_ready",
+      "sequence": 13
+    },
+    {
+      "phase": "generate",
+      "message": "Generating a repaired candidate.",
+      "time": "2026-10-16T16:43:59.099+00:00",
+      "attempt": 2,
+      "kind": "stage_started",
+      "sequence": 14
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:44:14.504+00:00",
+      "attempt": 2,
+      "kind": "stage_completed",
+      "sequence": 15
+    },
+    {
+      "phase": "execute",
+      "message": "Ready for Next stage. Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:44:14.504+00:00",
+      "attempt": 2,
+      "kind": "stage_ready",
+      "sequence": 16
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:44:15.311+00:00",
+      "attempt": 2,
+      "kind": "stage_started",
+      "sequence": 17
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:44:15.471+00:00",
+      "attempt": 2,
+      "kind": "stage_completed",
+      "sequence": 18
+    },
+    {
+      "phase": "evaluate",
+      "message": "Ready for Next stage. Checking the independent preset reference.",
+      "time": "2026-10-16T16:44:15.471+00:00",
+      "attempt": 2,
+      "kind": "stage_ready",
+      "sequence": 19
+    },
+    {
+      "phase": "evaluate",
+      "message": "Checking the independent preset reference.",
+      "time": "2026-10-16T16:44:16.205+00:00",
+      "attempt": 2,
+      "kind": "stage_started",
+      "sequence": 20
+    },
+    {
+      "phase": "evaluate",
+      "message": "All expected fields and values match the independent reference.",
+      "time": "2026-10-16T16:44:16.205+00:00",
+      "attempt": 2,
+      "kind": "stage_completed",
+      "sequence": 21
+    },
+    {
+      "phase": "done",
+      "message": "Validation passed. The loop stopped immediately.",
+      "time": "2026-10-16T16:44:16.205+00:00",
+      "attempt": 2,
+      "kind": "phase",
+      "sequence": 22
+    }
+  ],
+  "stage_history": [
+    {
+      "sequence": 1,
+      "phase": "generate",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:43:55.211+00:00",
+      "started_at": "2026-10-16T16:43:55.960+00:00",
+      "finished_at": "2026-10-16T16:43:55.960+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 2,
+      "phase": "execute",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:43:55.960+00:00",
+      "started_at": "2026-10-16T16:43:56.697+00:00",
+      "finished_at": "2026-10-16T16:43:56.840+00:00",
+      "duration_ms": 141
+    },
+    {
+      "sequence": 3,
+      "phase": "evaluate",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:43:56.840+00:00",
+      "started_at": "2026-10-16T16:43:57.603+00:00",
+      "finished_at": "2026-10-16T16:43:57.603+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 4,
+      "phase": "reflect",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:43:57.603+00:00",
+      "started_at": "2026-10-16T16:43:58.355+00:00",
+      "finished_at": "2026-10-16T16:43:58.355+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 5,
+      "phase": "generate",
+      "attempt": 2,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:43:58.355+00:00",
+      "started_at": "2026-10-16T16:43:59.099+00:00",
+      "finished_at": "2026-10-16T16:44:14.504+00:00",
+      "duration_ms": 15406
+    },
+    {
+      "sequence": 6,
+      "phase": "execute",
+      "attempt": 2,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:44:14.504+00:00",
+      "started_at": "2026-10-16T16:44:15.311+00:00",
+      "finished_at": "2026-10-16T16:44:15.471+00:00",
+      "duration_ms": 156
+    },
+    {
+      "sequence": 7,
+      "phase": "evaluate",
+      "attempt": 2,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:44:15.471+00:00",
+      "started_at": "2026-10-16T16:44:16.205+00:00",
+      "finished_at": "2026-10-16T16:44:16.205+00:00",
+      "duration_ms": 0
+    }
+  ],
+  "generation_output": "{\"reflection\": \"The previous code used an incorrect method to calculate weighted averages. It should multiply each score by its respective weight, sum these products, and then round the result to two decimal places.\", \"code\": \"averages = {}\\nfor student in DATA:\\n    scores = student['scores']\\n    weighted_average = round(scores[0] * 0.2 + scores[1] * 0.3 + scores[2] * 0.5, 2)\\n    averages[student['name']] = weighted_average\\n\\nresult = {\\n    'averages': averages,\\n    'class_average': round(sum(averages.values()) / len(averages), 2),\\n    'passed': sorted(name for name, value in averages.items() if value >= 60),\\n    'highest': max(averages, key=averages.get),\\n}\\nprint(json.dumps(result, indent=2))\"}",
+  "result": {
+    "averages": {
+      "Asha": 78,
+      "Kabir": 77,
+      "Mira": 95.6,
+      "Dev": 50.5
+    },
+    "class_average": 75.28,
+    "passed": [
+      "Asha",
+      "Kabir",
+      "Mira"
+    ],
+    "highest": "Mira"
+  },
+  "started_at": "2026-10-16T16:43:55.211+00:00",
+  "finished_at": "2026-10-16T16:44:16.205+00:00",
+  "metrics": {
+    "attempts": 2,
+    "repairs": 1,
+    "passed": true,
+    "duration_ms": 21000,
+    "generation_ms": 15406,
+    "execution_ms": 297,
+    "waiting_ms": 5297
+  },
+  "validation_kind": "semantic",
+  "notice": "Live model generation. A controlled first failure, if selected, is prewritten and explicitly marked."
+}

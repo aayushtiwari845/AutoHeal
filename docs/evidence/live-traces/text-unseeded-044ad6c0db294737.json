@@ -1,0 +1,2353 @@
+{
+  "id": "044ad6c0db294737",
+  "status": "succeeded",
+  "phase": "done",
+  "phase_status": "complete",
+  "task": "DATA is a list of text documents. Tokenize using only contiguous ASCII letters A-Z or a-z, and lowercase each token. Output exactly one JSON object with document_count, token_count, unique_tokens, frequencies (all lowercase token counts), and top_tokens (up to 3 objects with token and count). Rank by count descending, then token ascending for ties.",
+  "preset_id": "text",
+  "mode": "live",
+  "provider": "ollama",
+  "model": "qwen2.5-coder:7b",
+  "control_mode": "auto",
+  "max_attempts": 5,
+  "timeout": 5.0,
+  "seed_failure": false,
+  "trace_execution": true,
+  "input_data": [
+    "AI heals code. Code helps AI!",
+    "Reliable code, reliable results.",
+    "AI + tests = reliable code."
+  ],
+  "task_contract": {
+    "validation_kind": "semantic",
+    "expected_keys": [
+      "document_count",
+      "token_count",
+      "unique_tokens",
+      "frequencies",
+      "top_tokens"
+    ],
+    "rules": {
+      "document_count": "Count input documents, not words.",
+      "token_count": "Count all lowercase matches of [A-Za-z]+, including repeated tokens.",
+      "unique_tokens": "Count distinct lowercase tokens, not total occurrences.",
+      "frequencies": "Count every alphabetic token after lowercasing; punctuation is a separator.",
+      "top_tokens": "Rank by count descending and token ascending for ties; return at most three objects with token and count."
+    },
+    "description": "Independently checked against this preset's fixed reference."
+  },
+  "awaiting_step": false,
+  "next_phase": null,
+  "next_attempt": null,
+  "step_sequence": 3,
+  "step_token": null,
+  "attempts": [
+    {
+      "number": 1,
+      "code": "import re\nfrom collections import Counter\n\ntexts = DATA\ndocument_count = len(texts)\ntokenized_texts = [re.findall(r'[a-zA-Z]+', text.lower()) for text in texts]\nall_tokens = [token for sublist in tokenized_texts for token in sublist]\ntoken_count = len(all_tokens)\nunique_tokens = len(set(all_tokens))\nfrequencies = dict(Counter(all_tokens))\nsorted_frequencies = sorted(frequencies.items(), key=lambda x: (-x[1], x[0]))\ntop_tokens = [{'token': token, 'count': count} for token, count in sorted_frequencies[:3]]\n\nresult = {\n    'document_count': document_count,\n    'token_count': token_count,\n    'unique_tokens': unique_tokens,\n    'frequencies': frequencies,\n    'top_tokens': top_tokens\n}\n\nprint(json.dumps(result))",
+      "reflection": "The program tokenizes the input text documents by extracting contiguous ASCII letters and converting them to lowercase. It then counts the occurrences of each unique token, ranks them by count in descending order (and alphabetically for ties), and outputs the document count, total token count, unique tokens, frequencies, and the top three most frequent tokens.",
+      "status": "success",
+      "stdout": "{\"document_count\": 3, \"token_count\": 14, \"unique_tokens\": 7, \"frequencies\": {\"ai\": 3, \"heals\": 1, \"code\": 4, \"helps\": 1, \"reliable\": 3, \"results\": 1, \"tests\": 1}, \"top_tokens\": [{\"token\": \"code\", \"count\": 4}, {\"token\": \"ai\", \"count\": 3}, {\"token\": \"reliable\", \"count\": 3}]}",
+      "stderr": "",
+      "returncode": 0,
+      "duration_ms": 156,
+      "generation_ms": 18406,
+      "generation_output": "{\n  \"reflection\": \"The program tokenizes the input text documents by extracting contiguous ASCII letters and converting them to lowercase. It then counts the occurrences of each unique token, ranks them by count in descending order (and alphabetically for ties), and outputs the document count, total token count, unique tokens, frequencies, and the top three most frequent tokens.\",\n  \"code\": \"import re\\nfrom collections import Counter\\n\\ntexts = DATA\\ndocument_count = len(texts)\\ntokenized_texts = [re.findall(r'[a-zA-Z]+', text.lower()) for text in texts]\\nall_tokens = [token for sublist in tokenized_texts for token in sublist]\\ntoken_count = len(all_tokens)\\nunique_tokens = len(set(all_tokens))\\nfrequencies = dict(Counter(all_tokens))\\nsorted_frequencies = sorted(frequencies.items(), key=lambda x: (-x[1], x[0]))\\ntop_tokens = [{'token': token, 'count': count} for token, count in sorted_frequencies[:3]]\\n\\nresult = {\\n    'document_count': document_count,\\n    'token_count': token_count,\\n    'unique_tokens': unique_tokens,\\n    'frequencies': frequencies,\\n    'top_tokens': top_tokens\\n}\\n\\nprint(json.dumps(result))\"\n}",
+      "error": null,
+      "feedback": null,
+      "validation": {
+        "passed": true,
+        "kind": "semantic",
+        "message": "All expected fields and values match the independent reference.",
+        "mismatches": [],
+        "expected": {
+          "document_count": 3,
+          "token_count": 14,
+          "unique_tokens": 7,
+          "frequencies": {
+            "ai": 3,
+            "heals": 1,
+            "code": 4,
+            "helps": 1,
+            "reliable": 3,
+            "results": 1,
+            "tests": 1
+          },
+          "top_tokens": [
+            {
+              "token": "code",
+              "count": 4
+            },
+            {
+              "token": "ai",
+              "count": 3
+            },
+            {
+              "token": "reliable",
+              "count": 3
+            }
+          ]
+        },
+        "actual": {
+          "document_count": 3,
+          "token_count": 14,
+          "unique_tokens": 7,
+          "frequencies": {
+            "ai": 3,
+            "heals": 1,
+            "code": 4,
+            "helps": 1,
+            "reliable": 3,
+            "results": 1,
+            "tests": 1
+          },
+          "top_tokens": [
+            {
+              "token": "code",
+              "count": 4
+            },
+            {
+              "token": "ai",
+              "count": 3
+            },
+            {
+              "token": "reliable",
+              "count": 3
+            }
+          ]
+        }
+      },
+      "seeded": false,
+      "exec_steps": [
+        {
+          "line": 1,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ]
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "text": "AI heals code. Code helps AI!"
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "text": "Reliable code, reliable results."
+          }
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "text": "AI + tests = reliable code."
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ]
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai"
+            ],
+            "token": "ai"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai"
+            ],
+            "token": "heals"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai"
+            ],
+            "token": "code"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai"
+            ],
+            "token": "code"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai"
+            ],
+            "token": "helps"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai"
+            ],
+            "token": "ai"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai"
+            ],
+            "token": "ai"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "reliable",
+              "code",
+              "reliable",
+              "results"
+            ],
+            "token": "reliable"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "reliable",
+              "code",
+              "reliable",
+              "results"
+            ],
+            "token": "code"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "reliable",
+              "code",
+              "reliable",
+              "results"
+            ],
+            "token": "reliable"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "reliable",
+              "code",
+              "reliable",
+              "results"
+            ],
+            "token": "results"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "reliable",
+              "code",
+              "reliable",
+              "results"
+            ],
+            "token": "results"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "tests",
+              "reliable",
+              "code"
+            ],
+            "token": "ai"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "tests",
+              "reliable",
+              "code"
+            ],
+            "token": "tests"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "tests",
+              "reliable",
+              "code"
+            ],
+            "token": "reliable"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "tests",
+              "reliable",
+              "code"
+            ],
+            "token": "code"
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "sublist": [
+              "ai",
+              "tests",
+              "reliable",
+              "code"
+            ],
+            "token": "code"
+          }
+        },
+        {
+          "line": 8,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ]
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            }
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "x": [
+              "ai",
+              3
+            ]
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "x": [
+              "heals",
+              1
+            ]
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "x": [
+              "code",
+              4
+            ]
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "x": [
+              "helps",
+              1
+            ]
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "x": [
+              "reliable",
+              3
+            ]
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "x": [
+              "results",
+              1
+            ]
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "x": [
+              "tests",
+              1
+            ]
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ]
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ],
+            "token": "code",
+            "count": 4
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ],
+            "token": "ai",
+            "count": 3
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ],
+            "token": "reliable",
+            "count": 3
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ],
+            "top_tokens": [
+              {
+                "token": "code",
+                "count": 4
+              },
+              {
+                "token": "ai",
+                "count": 3
+              },
+              {
+                "token": "reliable",
+                "count": 3
+              }
+            ]
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ],
+            "top_tokens": [
+              {
+                "token": "code",
+                "count": 4
+              },
+              {
+                "token": "ai",
+                "count": 3
+              },
+              {
+                "token": "reliable",
+                "count": 3
+              }
+            ]
+          }
+        },
+        {
+          "line": 17,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ],
+            "top_tokens": [
+              {
+                "token": "code",
+                "count": 4
+              },
+              {
+                "token": "ai",
+                "count": 3
+              },
+              {
+                "token": "reliable",
+                "count": 3
+              }
+            ]
+          }
+        },
+        {
+          "line": 18,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ],
+            "top_tokens": [
+              {
+                "token": "code",
+                "count": 4
+              },
+              {
+                "token": "ai",
+                "count": 3
+              },
+              {
+                "token": "reliable",
+                "count": 3
+              }
+            ]
+          }
+        },
+        {
+          "line": 19,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ],
+            "top_tokens": [
+              {
+                "token": "code",
+                "count": 4
+              },
+              {
+                "token": "ai",
+                "count": 3
+              },
+              {
+                "token": "reliable",
+                "count": 3
+              }
+            ]
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ],
+            "top_tokens": [
+              {
+                "token": "code",
+                "count": 4
+              },
+              {
+                "token": "ai",
+                "count": 3
+              },
+              {
+                "token": "reliable",
+                "count": 3
+              }
+            ]
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "texts": [
+              "AI heals code. Code helps AI!",
+              "Reliable code, reliable results.",
+              "AI + tests = reliable code."
+            ],
+            "document_count": 3,
+            "tokenized_texts": [
+              [
+                "ai",
+                "heals",
+                "code",
+                "code",
+                "helps",
+                "ai"
+              ],
+              [
+                "reliable",
+                "code",
+                "reliable",
+                "results"
+              ],
+              [
+                "ai",
+                "tests",
+                "reliable",
+                "code"
+              ]
+            ],
+            "all_tokens": [
+              "ai",
+              "heals",
+              "code",
+              "code",
+              "helps",
+              "ai",
+              "<items omitted>"
+            ],
+            "token_count": 14,
+            "unique_tokens": 7,
+            "frequencies": {
+              "ai": 3,
+              "heals": 1,
+              "code": 4,
+              "helps": 1,
+              "reliable": 3,
+              "results": 1,
+              "<items omitted>": true
+            },
+            "sorted_frequencies": [
+              [
+                "code",
+                4
+              ],
+              [
+                "ai",
+                3
+              ],
+              [
+                "reliable",
+                3
+              ],
+              [
+                "heals",
+                1
+              ],
+              [
+                "helps",
+                1
+              ],
+              [
+                "results",
+                1
+              ],
+              "<items omitted>"
+            ],
+            "top_tokens": [
+              {
+                "token": "code",
+                "count": 4
+              },
+              {
+                "token": "ai",
+                "count": 3
+              },
+              {
+                "token": "reliable",
+                "count": 3
+              }
+            ],
+            "result": {
+              "document_count": 3,
+              "token_count": 14,
+              "unique_tokens": 7,
+              "frequencies": {
+                "ai": 3,
+                "heals": 1,
+                "code": 4,
+                "helps": 1,
+                "reliable": 3,
+                "results": 1,
+                "<items omitted>": true
+              },
+              "top_tokens": [
+                "<maximum depth>",
+                "<maximum depth>",
+                "<maximum depth>"
+              ]
+            }
+          }
+        }
+      ],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": true,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    }
+  ],
+  "events": [
+    {
+      "phase": "generate",
+      "message": "Generating the first candidate.",
+      "time": "2026-10-16T16:43:00.091+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 1
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:43:18.492+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 2
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:43:18.492+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 3
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:43:18.641+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 4
+    },
+    {
+      "phase": "evaluate",
+      "message": "Checking the independent preset reference.",
+      "time": "2026-10-16T16:43:18.641+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 5
+    },
+    {
+      "phase": "evaluate",
+      "message": "All expected fields and values match the independent reference.",
+      "time": "2026-10-16T16:43:18.641+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 6
+    },
+    {
+      "phase": "done",
+      "message": "Validation passed. The loop stopped immediately.",
+      "time": "2026-10-16T16:43:18.642+00:00",
+      "attempt": 1,
+      "kind": "phase",
+      "sequence": 7
+    }
+  ],
+  "stage_history": [
+    {
+      "sequence": 1,
+      "phase": "generate",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:43:00.091+00:00",
+      "started_at": "2026-10-16T16:43:00.091+00:00",
+      "finished_at": "2026-10-16T16:43:18.492+00:00",
+      "duration_ms": 18406
+    },
+    {
+      "sequence": 2,
+      "phase": "execute",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:43:18.492+00:00",
+      "started_at": "2026-10-16T16:43:18.492+00:00",
+      "finished_at": "2026-10-16T16:43:18.641+00:00",
+      "duration_ms": 156
+    },
+    {
+      "sequence": 3,
+      "phase": "evaluate",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:43:18.641+00:00",
+      "started_at": "2026-10-16T16:43:18.641+00:00",
+      "finished_at": "2026-10-16T16:43:18.641+00:00",
+      "duration_ms": 0
+    }
+  ],
+  "generation_output": "{\n  \"reflection\": \"The program tokenizes the input text documents by extracting contiguous ASCII letters and converting them to lowercase. It then counts the occurrences of each unique token, ranks them by count in descending order (and alphabetically for ties), and outputs the document count, total token count, unique tokens, frequencies, and the top three most frequent tokens.\",\n  \"code\": \"import re\\nfrom collections import Counter\\n\\ntexts = DATA\\ndocument_count = len(texts)\\ntokenized_texts = [re.findall(r'[a-zA-Z]+', text.lower()) for text in texts]\\nall_tokens = [token for sublist in tokenized_texts for token in sublist]\\ntoken_count = len(all_tokens)\\nunique_tokens = len(set(all_tokens))\\nfrequencies = dict(Counter(all_tokens))\\nsorted_frequencies = sorted(frequencies.items(), key=lambda x: (-x[1], x[0]))\\ntop_tokens = [{'token': token, 'count': count} for token, count in sorted_frequencies[:3]]\\n\\nresult = {\\n    'document_count': document_count,\\n    'token_count': token_count,\\n    'unique_tokens': unique_tokens,\\n    'frequencies': frequencies,\\n    'top_tokens': top_tokens\\n}\\n\\nprint(json.dumps(result))\"\n}",
+  "result": {
+    "document_count": 3,
+    "token_count": 14,
+    "unique_tokens": 7,
+    "frequencies": {
+      "ai": 3,
+      "heals": 1,
+      "code": 4,
+      "helps": 1,
+      "reliable": 3,
+      "results": 1,
+      "tests": 1
+    },
+    "top_tokens": [
+      {
+        "token": "code",
+        "count": 4
+      },
+      {
+        "token": "ai",
+        "count": 3
+      },
+      {
+        "token": "reliable",
+        "count": 3
+      }
+    ]
+  },
+  "started_at": "2026-10-16T16:43:00.090+00:00",
+  "finished_at": "2026-10-16T16:43:18.641+00:00",
+  "metrics": {
+    "attempts": 1,
+    "repairs": 0,
+    "passed": true,
+    "duration_ms": 18562,
+    "generation_ms": 18406,
+    "execution_ms": 156,
+    "waiting_ms": 0
+  },
+  "validation_kind": "semantic",
+  "notice": "Live model generation. A controlled first failure, if selected, is prewritten and explicitly marked."
+}

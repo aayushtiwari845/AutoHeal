@@ -8,7 +8,7 @@ Joint submission: **Aayush Kumar Tiwari — 16014223003 — LY AI & DS B2** and 
 
 3. **Why use Qwen2.5 Coder 7B?** It is a code-specialized instruction model that can run through the installed Ollama service on this laptop. Local inference requires no hosted API key. The selected checkpoint is distinct from Qwen3 4B and the other already-selected models.
 
-4. **Which parts are actually generated?** In live mode, the model generates normal candidates and repairs. If the controlled first failure is selected, that first source is prewritten and marked seeded; subsequent live repairs come from Ollama. Scripted replay uses predetermined broken and repaired sources, and is explicitly labelled.
+4. **Which parts are actually generated?** In live mode, the selected local Ollama or configured API model generates normal candidates and repairs. If the controlled first failure is selected, that first source is prewritten and marked seeded. Scripted replay uses predetermined broken and repaired sources, and is explicitly labelled.
 
 5. **What are the loop phases?** Generate, execute, evaluate, reflect and done. The run manager stores timestamped phase events and per-attempt code, diagnosis, stdout, stderr, exit code, execution duration, error, feedback and validation.
 
@@ -20,15 +20,15 @@ Joint submission: **Aayush Kumar Tiwari — 16014223003 — LY AI & DS B2** and 
 
 9. **What is a logical error in the grades case?** A simple average runs without an exception but ignores the 20%, 30% and 50% weights. Another authentic live error chose the alphabetically first passing name as highest. Correct highest means maximum unrounded weighted score; alphabetic order applies only when greatest scores tie.
 
-10. **Why retain a failed live run?** It shows that the loop does not guarantee convergence. The original fully generated grade run repaired malformed syntax but repeatedly preserved a wrong highest calculation and exhausted five attempts. Keeping its trace supports an honest analysis of failure and the feedback improvement.
+10. **Why retain a failed live run?** It shows that the loop does not guarantee convergence. The pre-fix v2 diagnostic suite passed three of six cases. Text candidates hit a lazy-import restriction inside Counter.most_common or returned token-count arrays instead of the required objects. Those original traces remain alongside the final six-case evaluation, which passed all six fixed cases after the execution and feedback fixes.
 
-11. **How did feedback improve after that failure?** Semantic feedback now identifies bounded field paths such as `$.highest` and restates the associated task rule, rather than only saying the output differs. It does not supply expected answer values to the model. The task clarifies the greatest-score rule, every rejected sales row must be counted, and the system reinforces that DATA is already loaded. Intermediate retests still showed a sales failure, so the complete evidence includes the final regression outcomes as well.
+11. **How did feedback improve after that failure?** Semantic feedback identifies bounded field paths such as `$.top_tokens[0]`, restates the rule, and distinguishes an expected object from an actual array. It does not supply expected answer values to the model. The provider also states the available built-ins and which modules require an explicit approved import. The runner preloads Counter's trusted internal heapq dependency before installing its audit guard; generated programs still cannot import heapq.
 
 12. **Are syntax errors always non-recoverable?** No. A later candidate can usually repair missing punctuation, indentation or an unterminated string. A failure is effectively non-recoverable within a run when the attempt budget is exhausted, the provider is unavailable, required capabilities are disallowed, or no correctness oracle can establish success.
 
 13. **What exact evidence reaches the model?** Current task and DATA, the latest candidate, error type/message/line, exit code, bounded stdout and stderr, duration and validation field paths with their contract rules. Repair uses the original user task, the previous assistant candidate, and a new user feedback message. Full old logs are not accumulated. Expected reference answer values are excluded from the repair context.
 
-14. **Why truncate and deduplicate logs?** Repeated output can consume context without adding evidence. The executor caps captured streams and condenses adjacent repeated lines. Provider feedback limits stdout to 1200 characters, stderr to 1800 and the full feedback envelope to 3500 characters.
+14. **Why truncate and deduplicate logs?** Repeated output can consume context without adding evidence. Feedback limits stdout to 1200 characters and stderr to 1800. The provider compacts feedback above 6500 characters, bounds the previous source to 12000 characters and retains only the latest attempt. Transport output and inference context have separate bounds.
 
 15. **What happens on an infinite loop?** The parent monitors the child and kills it when the configured execution bound expires, at most five seconds. TimeoutError is recorded and can guide a more efficient candidate. Model generation has a separate, longer transport bound; the five-second limit is not a total-run limit.
 
@@ -41,5 +41,9 @@ Joint submission: **Aayush Kumar Tiwari — 16014223003 — LY AI & DS B2** and 
 19. **How were expected answers independently checked?** Tests recompute numeric references using Decimal arithmetic and token statistics through a separate counting implementation. The validator checks expected keys, finite numeric values, stable lists and tight numeric tolerance. Fixed public examples do not prove generalization; varied and hidden tests would strengthen the evaluation.
 
 20. **What should you say about the results and ethics?** Report the saved traces, including exhaustion, and distinguish real live generation from scripted replay. Do not apply published model benchmark scores to this local quantized runtime. Prompts and exported traces may contain sensitive information even though inference is local. Acknowledge AI assistance and be able to explain the source and the error mechanics yourselves.
+
+21. **What exactly does step-through control?** It pauses before generation, execution, evaluation and reflection. The server releases one phase for each exact current step token. Repeating a consumed token cannot skip the next pause. Captured line replay is a separate view of real CPython events observed before each line executes; it is not a live debugger.
+
+22. **How are external API credentials handled?** Keys stay in the local server environment or ignored .env file. They are never entered in the browser, included in run exports or passed to generated Python. Selecting API mode sends task content and repair evidence externally. The API transport was tested with mocked responses; no live hosted API benchmark is claimed.
 
 Primary reading: [ReAct](https://arxiv.org/abs/2210.03629), [Reflexion](https://arxiv.org/abs/2303.11366), [Python subprocess](https://docs.python.org/3/library/subprocess.html), [Ollama chat API](https://docs.ollama.com/api/chat), [Qwen official model card](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct).

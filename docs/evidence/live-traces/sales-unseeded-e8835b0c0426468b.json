@@ -1,0 +1,6430 @@
+{
+  "id": "e8835b0c0426468b",
+  "status": "exhausted",
+  "phase": "done",
+  "phase_status": "complete",
+  "task": "DATA is a list of sales dictionaries. Strip each amount and convert it to float. Reject and count every empty or non-numeric amount; preserve valid negative adjustments. Output a single JSON object with total (2 decimals), valid_rows, rejected_rows, by_region (2 decimals), and top_region. top_region is the region with the greatest aggregate total; choose the alphabetically first region only when greatest totals tie. Every input row must contribute to exactly one of valid_rows or rejected_rows.",
+  "preset_id": "sales",
+  "mode": "live",
+  "provider": "ollama",
+  "model": "qwen2.5-coder:7b",
+  "control_mode": "auto",
+  "max_attempts": 5,
+  "timeout": 5.0,
+  "seed_failure": false,
+  "trace_execution": true,
+  "input_data": [
+    {
+      "region": "North",
+      "amount": "120.50"
+    },
+    {
+      "region": "South",
+      "amount": "80"
+    },
+    {
+      "region": "North",
+      "amount": "39.50"
+    },
+    {
+      "region": "South",
+      "amount": "N/A"
+    },
+    {
+      "region": "West",
+      "amount": "200.00"
+    },
+    {
+      "region": "West",
+      "amount": " -20 "
+    },
+    {
+      "region": "North",
+      "amount": ""
+    },
+    {
+      "region": "South",
+      "amount": "100.00"
+    }
+  ],
+  "task_contract": {
+    "validation_kind": "semantic",
+    "expected_keys": [
+      "total",
+      "valid_rows",
+      "rejected_rows",
+      "by_region",
+      "top_region"
+    ],
+    "rules": {
+      "total": "Sum every valid numeric amount, including negative adjustments, then round to two decimals.",
+      "valid_rows": "Count rows that convert to numeric amounts after stripping whitespace.",
+      "rejected_rows": "Count EVERY skipped row, including empty strings and conversion errors. valid_rows + rejected_rows must equal len(DATA). Validate using float in try/except; isdigit rejects valid signed numbers.",
+      "by_region": "Aggregate valid amounts by their region, including signed negative adjustments. Use float conversion in try/except, not isdigit. Round totals to two decimals.",
+      "top_region": "Compute the greatest total AFTER all rows are aggregated, including negative adjustments. Use alphabetical order only to break a tie at the greatest FINAL total."
+    },
+    "description": "Independently checked against this preset's fixed reference."
+  },
+  "awaiting_step": false,
+  "next_phase": null,
+  "next_attempt": null,
+  "step_sequence": 20,
+  "step_token": null,
+  "attempts": [
+    {
+      "number": 1,
+      "code": "import json\n\ndef process_sales_data(DATA):\n    totals = collections.defaultdict(float)\n    valid_rows = 0\n    rejected_rows = 0\n    by_region = {}\n\n    for row in DATA:\n        try:\n            amount = float(row['amount'].strip())\n            region = row['region']\n            totals[region] += amount\n            valid_rows += 1\n            if region not in by_region or totals[region] > by_region[region]['total']:\n                by_region[region] = {'total': totals[region], 'count': 1}\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\n                by_region[region]['count'] += 1\n        except ValueError:\n            rejected_rows += 1\n\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\n\n    return json.dumps({\n        'total': round(sum(totals.values()), 2),\n        'valid_rows': valid_rows,\n        'rejected_rows': rejected_rows,\n        'by_region': {region: {'total': round(total, 2), 'count': count} for region, (total, count) in by_region.items()},\n        'top_region': top_region\n    })\n\nprint(process_sales_data(DATA))",
+      "reflection": "The program iterates through each sales dictionary in the DATA list. It attempts to convert the 'amount' field to a float and strips any leading/trailing whitespace. If successful, it adds the amount to the total for its region and increments the valid_rows counter. If the conversion fails (due to an empty string or non-numeric value), it increments the rejected_rows counter. After processing all rows, it calculates the total for each region, determines the top_region based on the greatest aggregate total, and ensures that in case of a tie, the alphabetically first region is chosen. The results are then formatted to two decimal places and returned as a JSON object.",
+      "status": "failed",
+      "stdout": "",
+      "stderr": "CodePolicyError: DATA is preloaded and cannot be rebound; read it directly.",
+      "returncode": null,
+      "duration_ms": 0,
+      "generation_ms": 31485,
+      "generation_output": "{\n  \"reflection\": \"The program iterates through each sales dictionary in the DATA list. It attempts to convert the 'amount' field to a float and strips any leading/trailing whitespace. If successful, it adds the amount to the total for its region and increments the valid_rows counter. If the conversion fails (due to an empty string or non-numeric value), it increments the rejected_rows counter. After processing all rows, it calculates the total for each region, determines the top_region based on the greatest aggregate total, and ensures that in case of a tie, the alphabetically first region is chosen. The results are then formatted to two decimal places and returned as a JSON object.\",\n  \"code\": \"import json\\n\\ndef process_sales_data(DATA):\\n    totals = collections.defaultdict(float)\\n    valid_rows = 0\\n    rejected_rows = 0\\n    by_region = {}\\n\\n    for row in DATA:\\n        try:\\n            amount = float(row['amount'].strip())\\n            region = row['region']\\n            totals[region] += amount\\n            valid_rows += 1\\n            if region not in by_region or totals[region] > by_region[region]['total']:\\n                by_region[region] = {'total': totals[region], 'count': 1}\\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\\n                by_region[region]['count'] += 1\\n        except ValueError:\\n            rejected_rows += 1\\n\\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\\n\\n    return json.dumps({\\n        'total': round(sum(totals.values()), 2),\\n        'valid_rows': valid_rows,\\n        'rejected_rows': rejected_rows,\\n        'by_region': {region: {'total': round(total, 2), 'count': count} for region, (total, count) in by_region.items()},\\n        'top_region': top_region\\n    })\\n\\nprint(process_sales_data(DATA))\"\n}",
+      "error": {
+        "type": "CodePolicyError",
+        "message": "DATA is preloaded and cannot be rebound; read it directly.",
+        "line": 3
+      },
+      "feedback": {
+        "attempt": 1,
+        "error": {
+          "type": "CodePolicyError",
+          "message": "DATA is preloaded and cannot be rebound; read it directly.",
+          "line": 3
+        },
+        "execution": {
+          "exit_code": null,
+          "stdout": "",
+          "stderr": "CodePolicyError: DATA is preloaded and cannot be rebound; read it directly.",
+          "duration_ms": 0
+        },
+        "validation": {
+          "passed": false,
+          "kind": "execution",
+          "message": "Execution or JSON parsing failed.",
+          "mismatches": [],
+          "actual": null
+        },
+        "suggestion": "Correct the precise exception or semantic mismatch. Compute the result from DATA, respect all task rules, and print one JSON object. Return complete corrected Python source."
+      },
+      "validation": {
+        "passed": false,
+        "kind": "execution",
+        "message": "Execution or JSON parsing failed.",
+        "actual": null
+      },
+      "seeded": false,
+      "exec_steps": [],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": false,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    },
+    {
+      "number": 2,
+      "code": "import json\ndef process_sales_data():\n    totals = collections.defaultdict(float)\n    valid_rows = 0\n    rejected_rows = 0\n    by_region = {}\n\n    for row in DATA:\n        try:\n            amount = float(row['amount'].strip())\n            region = row['region']\n            totals[region] += amount\n            valid_rows += 1\n            if region not in by_region or totals[region] > by_region[region]['total']:\n                by_region[region] = {'total': totals[region], 'count': 1}\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\n                by_region[region]['count'] += 1\n        except ValueError:\n            rejected_rows += 1\n\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\n\n    return json.dumps({\n        'total': round(sum(totals.values()), 2),\n        'valid_rows': valid_rows,\n        'rejected_rows': rejected_rows,\n        'by_region': {region: {'total': round(total, 2), 'count': count} for region, (total, count) in by_region.items()},\n        'top_region': top_region\n    })\n\nprint(process_sales_data())",
+      "reflection": "The previous code attempted to rebind the preloaded DATA variable, which is not allowed. The correct approach is to directly access and process the data as provided.",
+      "status": "failed",
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"<temporary workspace>\\runner.py\", line 104, in <module>\n  File \"<generated>\", line 31, in <module>\n  File \"<generated>\", line 3, in process_sales_data\nNameError: name 'collections' is not defined. Did you forget to import 'collections'?",
+      "returncode": 1,
+      "duration_ms": 141,
+      "generation_ms": 24687,
+      "generation_output": "{\"reflection\": \"The previous code attempted to rebind the preloaded DATA variable, which is not allowed. The correct approach is to directly access and process the data as provided.\" , \"code\": \"import json\\ndef process_sales_data():\\n    totals = collections.defaultdict(float)\\n    valid_rows = 0\\n    rejected_rows = 0\\n    by_region = {}\\n\\n    for row in DATA:\\n        try:\\n            amount = float(row['amount'].strip())\\n            region = row['region']\\n            totals[region] += amount\\n            valid_rows += 1\\n            if region not in by_region or totals[region] > by_region[region]['total']:\\n                by_region[region] = {'total': totals[region], 'count': 1}\\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\\n                by_region[region]['count'] += 1\\n        except ValueError:\\n            rejected_rows += 1\\n\\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\\n\\n    return json.dumps({\\n        'total': round(sum(totals.values()), 2),\\n        'valid_rows': valid_rows,\\n        'rejected_rows': rejected_rows,\\n        'by_region': {region: {'total': round(total, 2), 'count': count} for region, (total, count) in by_region.items()},\\n        'top_region': top_region\\n    })\\n\\nprint(process_sales_data())\"}",
+      "error": {
+        "type": "NameError",
+        "message": "name 'collections' is not defined. Did you forget to import 'collections'?",
+        "line": 3
+      },
+      "feedback": {
+        "attempt": 2,
+        "error": {
+          "type": "NameError",
+          "message": "name 'collections' is not defined. Did you forget to import 'collections'?",
+          "line": 3
+        },
+        "execution": {
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<temporary workspace>\\runner.py\", line 104, in <module>\n  File \"<generated>\", line 31, in <module>\n  File \"<generated>\", line 3, in process_sales_data\nNameError: name 'collections' is not defined. Did you forget to import 'collections'?",
+          "duration_ms": 141
+        },
+        "validation": {
+          "passed": false,
+          "kind": "execution",
+          "message": "Execution or JSON parsing failed.",
+          "mismatches": [],
+          "actual": null
+        },
+        "suggestion": "Correct the precise exception or semantic mismatch. Compute the result from DATA, respect all task rules, and print one JSON object. Return complete corrected Python source."
+      },
+      "validation": {
+        "passed": false,
+        "kind": "execution",
+        "message": "Execution or JSON parsing failed.",
+        "actual": null
+      },
+      "seeded": false,
+      "exec_steps": [
+        {
+          "line": 1,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 31,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 3,
+          "event": "exception",
+          "locals": {},
+          "exception": {
+            "type": "NameError",
+            "message": "name 'collections' is not defined"
+          }
+        },
+        {
+          "line": 31,
+          "event": "exception",
+          "locals": {},
+          "exception": {
+            "type": "NameError",
+            "message": "name 'collections' is not defined"
+          }
+        }
+      ],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": true,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    },
+    {
+      "number": 3,
+      "code": "import json\nimport collections\ndef process_sales_data():\n    totals = collections.defaultdict(float)\n    valid_rows = 0\n    rejected_rows = 0\n    by_region = {}\n\n    for row in DATA:\n        try:\n            amount = float(row['amount'].strip())\n            region = row['region']\n            totals[region] += amount\n            valid_rows += 1\n            if region not in by_region or totals[region] > by_region[region]['total']:\n                by_region[region] = {'total': totals[region], 'count': 1}\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\n                by_region[region]['count'] += 1\n        except ValueError:\n            rejected_rows += 1\n\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\n\n    return json.dumps({\n        'total': round(sum(totals.values()), 2),\n        'valid_rows': valid_rows,\n        'rejected_rows': rejected_rows,\n        'by_region': {region: {'total': round(total, 2), 'count': count} for region, (total, count) in by_region.items()},\n        'top_region': top_region\n    })\n\nprint(process_sales_data())",
+      "reflection": "The previous code failed because it did not import the 'collections' module.",
+      "status": "failed",
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"<temporary workspace>\\runner.py\", line 104, in <module>\n  File \"<generated>\", line 32, in <module>\n  File \"<generated>\", line 28, in process_sales_data\nTypeError: type str doesn't define __round__ method",
+      "returncode": 1,
+      "duration_ms": 172,
+      "generation_ms": 24812,
+      "generation_output": "{\"reflection\": \"The previous code failed because it did not import the 'collections' module.\", \"code\": \"import json\\nimport collections\\ndef process_sales_data():\\n    totals = collections.defaultdict(float)\\n    valid_rows = 0\\n    rejected_rows = 0\\n    by_region = {}\\n\\n    for row in DATA:\\n        try:\\n            amount = float(row['amount'].strip())\\n            region = row['region']\\n            totals[region] += amount\\n            valid_rows += 1\\n            if region not in by_region or totals[region] > by_region[region]['total']:\\n                by_region[region] = {'total': totals[region], 'count': 1}\\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\\n                by_region[region]['count'] += 1\\n        except ValueError:\\n            rejected_rows += 1\\n\\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\\n\\n    return json.dumps({\\n        'total': round(sum(totals.values()), 2),\\n        'valid_rows': valid_rows,\\n        'rejected_rows': rejected_rows,\\n        'by_region': {region: {'total': round(total, 2), 'count': count} for region, (total, count) in by_region.items()},\\n        'top_region': top_region\\n    })\\n\\nprint(process_sales_data())\"}",
+      "error": {
+        "type": "TypeError",
+        "message": "type str doesn't define __round__ method",
+        "line": 28
+      },
+      "feedback": {
+        "attempt": 3,
+        "error": {
+          "type": "TypeError",
+          "message": "type str doesn't define __round__ method",
+          "line": 28
+        },
+        "execution": {
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<temporary workspace>\\runner.py\", line 104, in <module>\n  File \"<generated>\", line 32, in <module>\n  File \"<generated>\", line 28, in process_sales_data\nTypeError: type str doesn't define __round__ method",
+          "duration_ms": 172
+        },
+        "validation": {
+          "passed": false,
+          "kind": "execution",
+          "message": "Execution or JSON parsing failed.",
+          "mismatches": [],
+          "actual": null
+        },
+        "suggestion": "Correct the precise exception or semantic mismatch. Compute the result from DATA, respect all task rules, and print one JSON object. Return complete corrected Python source."
+      },
+      "validation": {
+        "passed": false,
+        "kind": "execution",
+        "message": "Execution or JSON parsing failed.",
+        "actual": null
+      },
+      "seeded": false,
+      "exec_steps": [
+        {
+          "line": 1,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 32,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {}
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            }
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            }
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "North"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "South"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "exception",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          },
+          "exception": {
+            "type": "ValueError",
+            "message": "could not convert string to float: 'N/A'"
+          }
+        },
+        {
+          "line": 19,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 20,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "North"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 17,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "exception",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          },
+          "exception": {
+            "type": "ValueError",
+            "message": "could not convert string to float: ''"
+          }
+        },
+        {
+          "line": 19,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 20,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "x": [
+              "North",
+              {
+                "total": 160.0,
+                "count": 1
+              }
+            ]
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "x": [
+              "South",
+              {
+                "total": 180.0,
+                "count": 1
+              }
+            ]
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "x": [
+              "West",
+              {
+                "total": 200.0,
+                "count": 1
+              }
+            ]
+          }
+        },
+        {
+          "line": 24,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 25,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 26,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 27,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 28,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 28,
+          "event": "exception",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "North",
+            "top_region": "West",
+            "total": "total",
+            "count": "count"
+          },
+          "exception": {
+            "type": "TypeError",
+            "message": "type str doesn't define __round__ method"
+          }
+        },
+        {
+          "line": 28,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "North",
+            "top_region": "West",
+            "total": "total",
+            "count": "count"
+          }
+        },
+        {
+          "line": 32,
+          "event": "exception",
+          "locals": {},
+          "exception": {
+            "type": "TypeError",
+            "message": "type str doesn't define __round__ method"
+          }
+        }
+      ],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": true,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    },
+    {
+      "number": 4,
+      "code": "import json\nimport collections\ndef process_sales_data():\n    totals = collections.defaultdict(float)\n    valid_rows = 0\n    rejected_rows = 0\n    by_region = {}\n\n    for row in DATA:\n        try:\n            amount = float(row['amount'].strip())\n            region = row['region']\n            totals[region] += amount\n            valid_rows += 1\n            if region not in by_region or totals[region] > by_region[region]['total']:\n                by_region[region] = {'total': totals[region], 'count': 1}\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\n                by_region[region]['count'] += 1\n        except ValueError:\n            rejected_rows += 1\n\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\n\n    return json.dumps({\n        'total': round(sum(totals.values()), 2),\n        'valid_rows': valid_rows,\n        'rejected_rows': rejected_rows,\n        'by_region': {region: {'total': totals[region], 'count': count} for region, (total, count) in by_region.items()},\n        'top_region': top_region\n    })\n\nprint(process_sales_data())",
+      "reflection": "The previous code attempted to round a string value, which caused a TypeError. This happened because the code did not properly check if the amount was numeric before attempting to convert it to float and then round it.",
+      "status": "failed",
+      "stdout": "{\"total\": 520.0, \"valid_rows\": 6, \"rejected_rows\": 2, \"by_region\": {\"North\": {\"total\": 160.0, \"count\": \"count\"}, \"South\": {\"total\": 180.0, \"count\": \"count\"}, \"West\": {\"total\": 180.0, \"count\": \"count\"}}, \"top_region\": \"West\"}",
+      "stderr": "",
+      "returncode": 0,
+      "duration_ms": 156,
+      "generation_ms": 26000,
+      "generation_output": "{\"reflection\": \"The previous code attempted to round a string value, which caused a TypeError. This happened because the code did not properly check if the amount was numeric before attempting to convert it to float and then round it.\", \"code\": \"import json\\nimport collections\\ndef process_sales_data():\\n    totals = collections.defaultdict(float)\\n    valid_rows = 0\\n    rejected_rows = 0\\n    by_region = {}\\n\\n    for row in DATA:\\n        try:\\n            amount = float(row['amount'].strip())\\n            region = row['region']\\n            totals[region] += amount\\n            valid_rows += 1\\n            if region not in by_region or totals[region] > by_region[region]['total']:\\n                by_region[region] = {'total': totals[region], 'count': 1}\\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\\n                by_region[region]['count'] += 1\\n        except ValueError:\\n            rejected_rows += 1\\n\\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\\n\\n    return json.dumps({\\n        'total': round(sum(totals.values()), 2),\\n        'valid_rows': valid_rows,\\n        'rejected_rows': rejected_rows,\\n        'by_region': {region: {'total': totals[region], 'count': count} for region, (total, count) in by_region.items()},\\n        'top_region': top_region\\n    })\\n\\nprint(process_sales_data())\"}",
+      "error": {
+        "type": "ValidationError",
+        "message": "Output violates the task contract at $.by_region.North, $.by_region.South, $.by_region.West, $.top_region; recompute these fields from DATA and the stated rules.",
+        "line": null
+      },
+      "feedback": {
+        "attempt": 4,
+        "error": {
+          "type": "ValidationError",
+          "message": "Output violates the task contract at $.by_region.North, $.by_region.South, $.by_region.West, $.top_region; recompute these fields from DATA and the stated rules.",
+          "line": null
+        },
+        "execution": {
+          "exit_code": 0,
+          "stdout": "{\"total\": 520.0, \"valid_rows\": 6, \"rejected_rows\": 2, \"by_region\": {\"North\": {\"total\": 160.0, \"count\": \"count\"}, \"South\": {\"total\": 180.0, \"count\": \"count\"}, \"West\": {\"total\": 180.0, \"count\": \"count\"}}, \"top_region\": \"West\"}",
+          "stderr": "",
+          "duration_ms": 156
+        },
+        "validation": {
+          "passed": false,
+          "kind": "semantic",
+          "message": "Output violates the task contract at $.by_region.North, $.by_region.South, $.by_region.West, $.top_region; recompute these fields from DATA and the stated rules.",
+          "mismatches": [
+            {
+              "path": "$.by_region.North",
+              "issue": "value or type differs",
+              "rule": "Aggregate valid amounts by their region, including signed negative adjustments. Use float conversion in try/except, not isdigit. Round totals to two decimals."
+            },
+            {
+              "path": "$.by_region.South",
+              "issue": "value or type differs",
+              "rule": "Aggregate valid amounts by their region, including signed negative adjustments. Use float conversion in try/except, not isdigit. Round totals to two decimals."
+            },
+            {
+              "path": "$.by_region.West",
+              "issue": "value or type differs",
+              "rule": "Aggregate valid amounts by their region, including signed negative adjustments. Use float conversion in try/except, not isdigit. Round totals to two decimals."
+            },
+            {
+              "path": "$.top_region",
+              "issue": "value or type differs",
+              "rule": "Compute the greatest total AFTER all rows are aggregated, including negative adjustments. Use alphabetical order only to break a tie at the greatest FINAL total."
+            }
+          ],
+          "actual": {
+            "total": 520.0,
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": "count"
+              },
+              "South": {
+                "total": 180.0,
+                "count": "count"
+              },
+              "West": {
+                "total": 180.0,
+                "count": "count"
+              }
+            },
+            "top_region": "West"
+          }
+        },
+        "suggestion": "Correct the precise exception or semantic mismatch. Compute the result from DATA, respect all task rules, and print one JSON object. Return complete corrected Python source."
+      },
+      "validation": {
+        "passed": false,
+        "kind": "semantic",
+        "message": "Output violates the task contract at $.by_region.North, $.by_region.South, $.by_region.West, $.top_region; recompute these fields from DATA and the stated rules.",
+        "mismatches": [
+          {
+            "path": "$.by_region.North",
+            "issue": "value or type differs",
+            "rule": "Aggregate valid amounts by their region, including signed negative adjustments. Use float conversion in try/except, not isdigit. Round totals to two decimals."
+          },
+          {
+            "path": "$.by_region.South",
+            "issue": "value or type differs",
+            "rule": "Aggregate valid amounts by their region, including signed negative adjustments. Use float conversion in try/except, not isdigit. Round totals to two decimals."
+          },
+          {
+            "path": "$.by_region.West",
+            "issue": "value or type differs",
+            "rule": "Aggregate valid amounts by their region, including signed negative adjustments. Use float conversion in try/except, not isdigit. Round totals to two decimals."
+          },
+          {
+            "path": "$.top_region",
+            "issue": "value or type differs",
+            "rule": "Compute the greatest total AFTER all rows are aggregated, including negative adjustments. Use alphabetical order only to break a tie at the greatest FINAL total."
+          }
+        ],
+        "expected": {
+          "total": 520.0,
+          "valid_rows": 6,
+          "rejected_rows": 2,
+          "by_region": {
+            "North": 160.0,
+            "South": 180.0,
+            "West": 180.0
+          },
+          "top_region": "South"
+        },
+        "actual": {
+          "total": 520.0,
+          "valid_rows": 6,
+          "rejected_rows": 2,
+          "by_region": {
+            "North": {
+              "total": 160.0,
+              "count": "count"
+            },
+            "South": {
+              "total": 180.0,
+              "count": "count"
+            },
+            "West": {
+              "total": 180.0,
+              "count": "count"
+            }
+          },
+          "top_region": "West"
+        }
+      },
+      "seeded": false,
+      "exec_steps": [
+        {
+          "line": 1,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 32,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {}
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            }
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            }
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "North"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "South"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "exception",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          },
+          "exception": {
+            "type": "ValueError",
+            "message": "could not convert string to float: 'N/A'"
+          }
+        },
+        {
+          "line": 19,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 20,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "North"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 17,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "exception",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          },
+          "exception": {
+            "type": "ValueError",
+            "message": "could not convert string to float: ''"
+          }
+        },
+        {
+          "line": 19,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 20,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "x": [
+              "North",
+              {
+                "total": 160.0,
+                "count": 1
+              }
+            ]
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "x": [
+              "South",
+              {
+                "total": 180.0,
+                "count": 1
+              }
+            ]
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "x": [
+              "West",
+              {
+                "total": 200.0,
+                "count": 1
+              }
+            ]
+          }
+        },
+        {
+          "line": 24,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 25,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 26,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 27,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 28,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 28,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "North",
+            "top_region": "West",
+            "total": "total",
+            "count": "count"
+          }
+        },
+        {
+          "line": 28,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West",
+            "total": "total",
+            "count": "count"
+          }
+        },
+        {
+          "line": 28,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "West",
+            "top_region": "West",
+            "total": "total",
+            "count": "count"
+          }
+        },
+        {
+          "line": 29,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 24,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        }
+      ],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": true,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    },
+    {
+      "number": 5,
+      "code": "import json\nimport collections\ndef process_sales_data():\n    totals = collections.defaultdict(float)\n    valid_rows = 0\n    rejected_rows = 0\n    by_region = {}\n\n    for row in DATA:\n        try:\n            amount = float(row['amount'].strip())\n            region = row['region']\n            totals[region] += amount\n            valid_rows += 1\n            if region not in by_region or totals[region] > by_region[region]['total']:\n                by_region[region] = {'total': totals[region], 'count': 1}\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\n                by_region[region]['count'] += 1\n        except ValueError:\n            rejected_rows += 1\n\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\n\n    return json.dumps({\n        'total': round(sum(totals.values()), 2),\n        'valid_rows': valid_rows,\n        'rejected_rows': rejected_rows,\n        'by_region': {region: {'total': round(total, 2), 'count': count} for region, (total, count) in by_region.items()},\n        'top_region': top_region\n    })\n\nprint(process_sales_data())",
+      "reflection": "The previous candidate failed because it incorrectly handled the aggregation of valid amounts by region and did not properly compute the top_region.",
+      "status": "failed",
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"<temporary workspace>\\runner.py\", line 104, in <module>\n  File \"<generated>\", line 32, in <module>\n  File \"<generated>\", line 28, in process_sales_data\nTypeError: type str doesn't define __round__ method",
+      "returncode": 1,
+      "duration_ms": 93,
+      "generation_ms": 25329,
+      "generation_output": "{\"reflection\": \"The previous candidate failed because it incorrectly handled the aggregation of valid amounts by region and did not properly compute the top_region.\", \"code\": \"import json\\nimport collections\\ndef process_sales_data():\\n    totals = collections.defaultdict(float)\\n    valid_rows = 0\\n    rejected_rows = 0\\n    by_region = {}\\n\\n    for row in DATA:\\n        try:\\n            amount = float(row['amount'].strip())\\n            region = row['region']\\n            totals[region] += amount\\n            valid_rows += 1\\n            if region not in by_region or totals[region] > by_region[region]['total']:\\n                by_region[region] = {'total': totals[region], 'count': 1}\\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\\n                by_region[region]['count'] += 1\\n        except ValueError:\\n            rejected_rows += 1\\n\\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\\n\\n    return json.dumps({\\n        'total': round(sum(totals.values()), 2),\\n        'valid_rows': valid_rows,\\n        'rejected_rows': rejected_rows,\\n        'by_region': {region: {'total': round(total, 2), 'count': count} for region, (total, count) in by_region.items()},\\n        'top_region': top_region\\n    })\\n\\nprint(process_sales_data())\"}",
+      "error": {
+        "type": "TypeError",
+        "message": "type str doesn't define __round__ method",
+        "line": 28
+      },
+      "feedback": {
+        "attempt": 5,
+        "error": {
+          "type": "TypeError",
+          "message": "type str doesn't define __round__ method",
+          "line": 28
+        },
+        "execution": {
+          "exit_code": 1,
+          "stdout": "",
+          "stderr": "Traceback (most recent call last):\n  File \"<temporary workspace>\\runner.py\", line 104, in <module>\n  File \"<generated>\", line 32, in <module>\n  File \"<generated>\", line 28, in process_sales_data\nTypeError: type str doesn't define __round__ method",
+          "duration_ms": 93
+        },
+        "validation": {
+          "passed": false,
+          "kind": "execution",
+          "message": "Execution or JSON parsing failed.",
+          "mismatches": [],
+          "actual": null
+        },
+        "suggestion": "Correct the precise exception or semantic mismatch. Compute the result from DATA, respect all task rules, and print one JSON object. Return complete corrected Python source."
+      },
+      "validation": {
+        "passed": false,
+        "kind": "execution",
+        "message": "Execution or JSON parsing failed.",
+        "actual": null
+      },
+      "seeded": false,
+      "exec_steps": [
+        {
+          "line": 1,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 2,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 3,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 32,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 4,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 5,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 6,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0
+          }
+        },
+        {
+          "line": 7,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {}
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            }
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            }
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 0,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {},
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 120.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "North"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 1,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "80"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 80.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "South"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 2,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 120.5,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": "39.50"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "exception",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          },
+          "exception": {
+            "type": "ValueError",
+            "message": "could not convert string to float: 'N/A'"
+          }
+        },
+        {
+          "line": 19,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 20,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 0,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "N/A"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 39.5,
+            "region": "North"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "North"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 3,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": "200.00"
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": 200.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 4,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 17,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "West",
+              "amount": " -20 "
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "exception",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          },
+          "exception": {
+            "type": "ValueError",
+            "message": "could not convert string to float: ''"
+          }
+        },
+        {
+          "line": 19,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 20,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 1,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "North",
+              "amount": ""
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 10,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 11,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": -20.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 12,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "West"
+          }
+        },
+        {
+          "line": 13,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 14,
+          "event": "line",
+          "locals": {
+            "valid_rows": 5,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 15,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 16,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 80.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 9,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South"
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "x": [
+              "North",
+              {
+                "total": 160.0,
+                "count": 1
+              }
+            ]
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "x": [
+              "South",
+              {
+                "total": 180.0,
+                "count": 1
+              }
+            ]
+          }
+        },
+        {
+          "line": 22,
+          "event": "line",
+          "locals": {
+            "x": [
+              "West",
+              {
+                "total": 200.0,
+                "count": 1
+              }
+            ]
+          }
+        },
+        {
+          "line": 24,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 25,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 26,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 27,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 28,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "South",
+            "top_region": "West"
+          }
+        },
+        {
+          "line": 28,
+          "event": "exception",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "North",
+            "top_region": "West",
+            "total": "total",
+            "count": "count"
+          },
+          "exception": {
+            "type": "TypeError",
+            "message": "type str doesn't define __round__ method"
+          }
+        },
+        {
+          "line": 28,
+          "event": "line",
+          "locals": {
+            "valid_rows": 6,
+            "rejected_rows": 2,
+            "by_region": {
+              "North": {
+                "total": 160.0,
+                "count": 1
+              },
+              "South": {
+                "total": 180.0,
+                "count": 1
+              },
+              "West": {
+                "total": 200.0,
+                "count": 1
+              }
+            },
+            "row": {
+              "region": "South",
+              "amount": "100.00"
+            },
+            "amount": 100.0,
+            "region": "North",
+            "top_region": "West",
+            "total": "total",
+            "count": "count"
+          }
+        },
+        {
+          "line": 32,
+          "event": "exception",
+          "locals": {},
+          "exception": {
+            "type": "TypeError",
+            "message": "type str doesn't define __round__ method"
+          }
+        }
+      ],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": true,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    }
+  ],
+  "events": [
+    {
+      "phase": "generate",
+      "message": "Generating the first candidate.",
+      "time": "2026-10-16T16:32:23.922+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 1
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:32:55.411+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 2
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:32:55.411+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 3
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:32:55.412+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 4
+    },
+    {
+      "phase": "evaluate",
+      "message": "Checking the independent preset reference.",
+      "time": "2026-10-16T16:32:55.412+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 5
+    },
+    {
+      "phase": "evaluate",
+      "message": "Execution or JSON parsing failed.",
+      "time": "2026-10-16T16:32:55.412+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 6
+    },
+    {
+      "phase": "reflect",
+      "message": "Preparing concise execution and contract feedback for the next candidate.",
+      "time": "2026-10-16T16:32:55.412+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 7
+    },
+    {
+      "phase": "reflect",
+      "message": "Failure evidence prepared: CodePolicyError on line 3: DATA is preloaded and cannot be rebound; read it directly.",
+      "time": "2026-10-16T16:32:55.412+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 8
+    },
+    {
+      "phase": "generate",
+      "message": "Generating a repaired candidate.",
+      "time": "2026-10-16T16:32:55.412+00:00",
+      "attempt": 2,
+      "kind": "stage_started",
+      "sequence": 9
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:33:20.106+00:00",
+      "attempt": 2,
+      "kind": "stage_completed",
+      "sequence": 10
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:33:20.106+00:00",
+      "attempt": 2,
+      "kind": "stage_started",
+      "sequence": 11
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:33:20.243+00:00",
+      "attempt": 2,
+      "kind": "stage_completed",
+      "sequence": 12
+    },
+    {
+      "phase": "evaluate",
+      "message": "Checking the independent preset reference.",
+      "time": "2026-10-16T16:33:20.243+00:00",
+      "attempt": 2,
+      "kind": "stage_started",
+      "sequence": 13
+    },
+    {
+      "phase": "evaluate",
+      "message": "Execution or JSON parsing failed.",
+      "time": "2026-10-16T16:33:20.243+00:00",
+      "attempt": 2,
+      "kind": "stage_completed",
+      "sequence": 14
+    },
+    {
+      "phase": "reflect",
+      "message": "Preparing concise execution and contract feedback for the next candidate.",
+      "time": "2026-10-16T16:33:20.243+00:00",
+      "attempt": 2,
+      "kind": "stage_started",
+      "sequence": 15
+    },
+    {
+      "phase": "reflect",
+      "message": "Failure evidence prepared: NameError on line 3: name 'collections' is not defined. Did you forget to import 'collections'?",
+      "time": "2026-10-16T16:33:20.243+00:00",
+      "attempt": 2,
+      "kind": "stage_completed",
+      "sequence": 16
+    },
+    {
+      "phase": "generate",
+      "message": "Generating a repaired candidate.",
+      "time": "2026-10-16T16:33:20.243+00:00",
+      "attempt": 3,
+      "kind": "stage_started",
+      "sequence": 17
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:33:45.059+00:00",
+      "attempt": 3,
+      "kind": "stage_completed",
+      "sequence": 18
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:33:45.059+00:00",
+      "attempt": 3,
+      "kind": "stage_started",
+      "sequence": 19
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:33:45.232+00:00",
+      "attempt": 3,
+      "kind": "stage_completed",
+      "sequence": 20
+    },
+    {
+      "phase": "evaluate",
+      "message": "Checking the independent preset reference.",
+      "time": "2026-10-16T16:33:45.232+00:00",
+      "attempt": 3,
+      "kind": "stage_started",
+      "sequence": 21
+    },
+    {
+      "phase": "evaluate",
+      "message": "Execution or JSON parsing failed.",
+      "time": "2026-10-16T16:33:45.232+00:00",
+      "attempt": 3,
+      "kind": "stage_completed",
+      "sequence": 22
+    },
+    {
+      "phase": "reflect",
+      "message": "Preparing concise execution and contract feedback for the next candidate.",
+      "time": "2026-10-16T16:33:45.232+00:00",
+      "attempt": 3,
+      "kind": "stage_started",
+      "sequence": 23
+    },
+    {
+      "phase": "reflect",
+      "message": "Failure evidence prepared: TypeError on line 28: type str doesn't define __round__ method",
+      "time": "2026-10-16T16:33:45.232+00:00",
+      "attempt": 3,
+      "kind": "stage_completed",
+      "sequence": 24
+    },
+    {
+      "phase": "generate",
+      "message": "Generating a repaired candidate.",
+      "time": "2026-10-16T16:33:45.232+00:00",
+      "attempt": 4,
+      "kind": "stage_started",
+      "sequence": 25
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:34:11.229+00:00",
+      "attempt": 4,
+      "kind": "stage_completed",
+      "sequence": 26
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:34:11.229+00:00",
+      "attempt": 4,
+      "kind": "stage_started",
+      "sequence": 27
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:34:11.381+00:00",
+      "attempt": 4,
+      "kind": "stage_completed",
+      "sequence": 28
+    },
+    {
+      "phase": "evaluate",
+      "message": "Checking the independent preset reference.",
+      "time": "2026-10-16T16:34:11.381+00:00",
+      "attempt": 4,
+      "kind": "stage_started",
+      "sequence": 29
+    },
+    {
+      "phase": "evaluate",
+      "message": "Output violates the task contract at $.by_region.North, $.by_region.South, $.by_region.West, $.top_region; recompute these fields from DATA and the stated rules.",
+      "time": "2026-10-16T16:34:11.381+00:00",
+      "attempt": 4,
+      "kind": "stage_completed",
+      "sequence": 30
+    },
+    {
+      "phase": "reflect",
+      "message": "Preparing concise execution and contract feedback for the next candidate.",
+      "time": "2026-10-16T16:34:11.381+00:00",
+      "attempt": 4,
+      "kind": "stage_started",
+      "sequence": 31
+    },
+    {
+      "phase": "reflect",
+      "message": "Failure evidence prepared: ValidationError: Output violates the task contract at $.by_region.North, $.by_region.South, $.by_region.West, $.top_region; recompute these fields from DATA and the stated rules.",
+      "time": "2026-10-16T16:34:11.381+00:00",
+      "attempt": 4,
+      "kind": "stage_completed",
+      "sequence": 32
+    },
+    {
+      "phase": "generate",
+      "message": "Generating a repaired candidate.",
+      "time": "2026-10-16T16:34:11.381+00:00",
+      "attempt": 5,
+      "kind": "stage_started",
+      "sequence": 33
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:34:36.703+00:00",
+      "attempt": 5,
+      "kind": "stage_completed",
+      "sequence": 34
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:34:36.703+00:00",
+      "attempt": 5,
+      "kind": "stage_started",
+      "sequence": 35
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:34:36.803+00:00",
+      "attempt": 5,
+      "kind": "stage_completed",
+      "sequence": 36
+    },
+    {
+      "phase": "evaluate",
+      "message": "Checking the independent preset reference.",
+      "time": "2026-10-16T16:34:36.803+00:00",
+      "attempt": 5,
+      "kind": "stage_started",
+      "sequence": 37
+    },
+    {
+      "phase": "evaluate",
+      "message": "Execution or JSON parsing failed.",
+      "time": "2026-10-16T16:34:36.803+00:00",
+      "attempt": 5,
+      "kind": "stage_completed",
+      "sequence": 38
+    },
+    {
+      "phase": "reflect",
+      "message": "Preparing concise execution and contract feedback for the next candidate.",
+      "time": "2026-10-16T16:34:36.803+00:00",
+      "attempt": 5,
+      "kind": "stage_started",
+      "sequence": 39
+    },
+    {
+      "phase": "reflect",
+      "message": "Failure evidence prepared: TypeError on line 28: type str doesn't define __round__ method",
+      "time": "2026-10-16T16:34:36.804+00:00",
+      "attempt": 5,
+      "kind": "stage_completed",
+      "sequence": 40
+    },
+    {
+      "phase": "done",
+      "message": "Attempt limit (5) reached. No further execution.",
+      "time": "2026-10-16T16:34:36.804+00:00",
+      "attempt": null,
+      "kind": "phase",
+      "sequence": 41
+    }
+  ],
+  "stage_history": [
+    {
+      "sequence": 1,
+      "phase": "generate",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:32:23.922+00:00",
+      "started_at": "2026-10-16T16:32:23.922+00:00",
+      "finished_at": "2026-10-16T16:32:55.411+00:00",
+      "duration_ms": 31485
+    },
+    {
+      "sequence": 2,
+      "phase": "execute",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:32:55.411+00:00",
+      "started_at": "2026-10-16T16:32:55.411+00:00",
+      "finished_at": "2026-10-16T16:32:55.412+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 3,
+      "phase": "evaluate",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:32:55.412+00:00",
+      "started_at": "2026-10-16T16:32:55.412+00:00",
+      "finished_at": "2026-10-16T16:32:55.412+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 4,
+      "phase": "reflect",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:32:55.412+00:00",
+      "started_at": "2026-10-16T16:32:55.412+00:00",
+      "finished_at": "2026-10-16T16:32:55.412+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 5,
+      "phase": "generate",
+      "attempt": 2,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:32:55.412+00:00",
+      "started_at": "2026-10-16T16:32:55.412+00:00",
+      "finished_at": "2026-10-16T16:33:20.106+00:00",
+      "duration_ms": 24687
+    },
+    {
+      "sequence": 6,
+      "phase": "execute",
+      "attempt": 2,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:33:20.106+00:00",
+      "started_at": "2026-10-16T16:33:20.106+00:00",
+      "finished_at": "2026-10-16T16:33:20.242+00:00",
+      "duration_ms": 141
+    },
+    {
+      "sequence": 7,
+      "phase": "evaluate",
+      "attempt": 2,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:33:20.243+00:00",
+      "started_at": "2026-10-16T16:33:20.243+00:00",
+      "finished_at": "2026-10-16T16:33:20.243+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 8,
+      "phase": "reflect",
+      "attempt": 2,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:33:20.243+00:00",
+      "started_at": "2026-10-16T16:33:20.243+00:00",
+      "finished_at": "2026-10-16T16:33:20.243+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 9,
+      "phase": "generate",
+      "attempt": 3,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:33:20.243+00:00",
+      "started_at": "2026-10-16T16:33:20.243+00:00",
+      "finished_at": "2026-10-16T16:33:45.059+00:00",
+      "duration_ms": 24812
+    },
+    {
+      "sequence": 10,
+      "phase": "execute",
+      "attempt": 3,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:33:45.059+00:00",
+      "started_at": "2026-10-16T16:33:45.059+00:00",
+      "finished_at": "2026-10-16T16:33:45.232+00:00",
+      "duration_ms": 172
+    },
+    {
+      "sequence": 11,
+      "phase": "evaluate",
+      "attempt": 3,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:33:45.232+00:00",
+      "started_at": "2026-10-16T16:33:45.232+00:00",
+      "finished_at": "2026-10-16T16:33:45.232+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 12,
+      "phase": "reflect",
+      "attempt": 3,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:33:45.232+00:00",
+      "started_at": "2026-10-16T16:33:45.232+00:00",
+      "finished_at": "2026-10-16T16:33:45.232+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 13,
+      "phase": "generate",
+      "attempt": 4,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:33:45.232+00:00",
+      "started_at": "2026-10-16T16:33:45.232+00:00",
+      "finished_at": "2026-10-16T16:34:11.229+00:00",
+      "duration_ms": 26000
+    },
+    {
+      "sequence": 14,
+      "phase": "execute",
+      "attempt": 4,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:11.229+00:00",
+      "started_at": "2026-10-16T16:34:11.229+00:00",
+      "finished_at": "2026-10-16T16:34:11.381+00:00",
+      "duration_ms": 156
+    },
+    {
+      "sequence": 15,
+      "phase": "evaluate",
+      "attempt": 4,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:11.381+00:00",
+      "started_at": "2026-10-16T16:34:11.381+00:00",
+      "finished_at": "2026-10-16T16:34:11.381+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 16,
+      "phase": "reflect",
+      "attempt": 4,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:11.381+00:00",
+      "started_at": "2026-10-16T16:34:11.381+00:00",
+      "finished_at": "2026-10-16T16:34:11.381+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 17,
+      "phase": "generate",
+      "attempt": 5,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:11.381+00:00",
+      "started_at": "2026-10-16T16:34:11.381+00:00",
+      "finished_at": "2026-10-16T16:34:36.703+00:00",
+      "duration_ms": 25329
+    },
+    {
+      "sequence": 18,
+      "phase": "execute",
+      "attempt": 5,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:36.703+00:00",
+      "started_at": "2026-10-16T16:34:36.703+00:00",
+      "finished_at": "2026-10-16T16:34:36.803+00:00",
+      "duration_ms": 93
+    },
+    {
+      "sequence": 19,
+      "phase": "evaluate",
+      "attempt": 5,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:36.803+00:00",
+      "started_at": "2026-10-16T16:34:36.803+00:00",
+      "finished_at": "2026-10-16T16:34:36.803+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 20,
+      "phase": "reflect",
+      "attempt": 5,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:34:36.803+00:00",
+      "started_at": "2026-10-16T16:34:36.803+00:00",
+      "finished_at": "2026-10-16T16:34:36.804+00:00",
+      "duration_ms": 0
+    }
+  ],
+  "generation_output": "{\"reflection\": \"The previous candidate failed because it incorrectly handled the aggregation of valid amounts by region and did not properly compute the top_region.\", \"code\": \"import json\\nimport collections\\ndef process_sales_data():\\n    totals = collections.defaultdict(float)\\n    valid_rows = 0\\n    rejected_rows = 0\\n    by_region = {}\\n\\n    for row in DATA:\\n        try:\\n            amount = float(row['amount'].strip())\\n            region = row['region']\\n            totals[region] += amount\\n            valid_rows += 1\\n            if region not in by_region or totals[region] > by_region[region]['total']:\\n                by_region[region] = {'total': totals[region], 'count': 1}\\n            elif totals[region] == by_region[region]['total'] and region < by_region[region]['region']:\\n                by_region[region]['count'] += 1\\n        except ValueError:\\n            rejected_rows += 1\\n\\n    top_region = sorted(by_region.items(), key=lambda x: (-x[1]['total'], x[0]))[0][0]\\n\\n    return json.dumps({\\n        'total': round(sum(totals.values()), 2),\\n        'valid_rows': valid_rows,\\n        'rejected_rows': rejected_rows,\\n        'by_region': {region: {'total': round(total, 2), 'count': count} for region, (total, count) in by_region.items()},\\n        'top_region': top_region\\n    })\\n\\nprint(process_sales_data())\"}",
+  "result": null,
+  "started_at": "2026-10-16T16:32:23.921+00:00",
+  "finished_at": "2026-10-16T16:34:36.804+00:00",
+  "metrics": {
+    "attempts": 5,
+    "repairs": 4,
+    "passed": false,
+    "duration_ms": 132875,
+    "generation_ms": 132313,
+    "execution_ms": 562,
+    "waiting_ms": 0
+  },
+  "validation_kind": "semantic",
+  "notice": "Live model generation. A controlled first failure, if selected, is prewritten and explicitly marked."
+}

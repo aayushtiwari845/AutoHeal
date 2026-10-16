@@ -1,0 +1,247 @@
+{
+  "id": "e2d23ae1ec7049af",
+  "status": "cancelled",
+  "phase": "done",
+  "phase_status": "complete",
+  "task": "DATA is a list of sales dictionaries. Strip each amount and convert it to float. Reject and count every empty or non-numeric amount; preserve valid negative adjustments. Output a single JSON object with total (2 decimals), valid_rows, rejected_rows, by_region (2 decimals), and top_region. top_region is the region with the greatest aggregate total; choose the alphabetically first region only when greatest totals tie. Every input row must contribute to exactly one of valid_rows or rejected_rows.",
+  "preset_id": "sales",
+  "mode": "replay",
+  "provider": "ollama",
+  "model": "scripted-replay",
+  "control_mode": "manual",
+  "max_attempts": 5,
+  "timeout": 5,
+  "seed_failure": true,
+  "trace_execution": true,
+  "input_data": [
+    {
+      "region": "North",
+      "amount": "120.50"
+    },
+    {
+      "region": "South",
+      "amount": "80"
+    },
+    {
+      "region": "North",
+      "amount": "39.50"
+    },
+    {
+      "region": "South",
+      "amount": "N/A"
+    },
+    {
+      "region": "West",
+      "amount": "200.00"
+    },
+    {
+      "region": "West",
+      "amount": " -20 "
+    },
+    {
+      "region": "North",
+      "amount": ""
+    },
+    {
+      "region": "South",
+      "amount": "100.00"
+    }
+  ],
+  "task_contract": {
+    "validation_kind": "semantic",
+    "expected_keys": [
+      "total",
+      "valid_rows",
+      "rejected_rows",
+      "by_region",
+      "top_region"
+    ],
+    "rules": {
+      "total": "Sum every valid numeric amount, including negative adjustments, then round to two decimals.",
+      "valid_rows": "Count rows that convert to numeric amounts after stripping whitespace.",
+      "rejected_rows": "Count EVERY skipped row, including empty strings and conversion errors. valid_rows + rejected_rows must equal len(DATA). Validate using float in try/except; isdigit rejects valid signed numbers.",
+      "by_region": "Aggregate valid amounts by their region, including signed negative adjustments. Use float conversion in try/except, not isdigit. Round totals to two decimals.",
+      "top_region": "Compute the greatest total AFTER all rows are aggregated, including negative adjustments. Use alphabetical order only to break a tie at the greatest FINAL total."
+    },
+    "description": "Independently checked against this preset's fixed reference."
+  },
+  "awaiting_step": false,
+  "next_phase": null,
+  "next_attempt": null,
+  "step_sequence": 3,
+  "step_token": null,
+  "attempts": [
+    {
+      "number": 1,
+      "code": "total = sum(row['amount'] for row in DATA)\nprint(json.dumps({'total': total}))",
+      "reflection": "Declared controlled fault. This first candidate is prewritten, not model generated.",
+      "status": "cancelled",
+      "stdout": "",
+      "stderr": "Traceback (most recent call last):\n  File \"<temporary workspace>\\runner.py\", line 104, in <module>\n  File \"<generated>\", line 1, in <module>\nTypeError: unsupported operand type(s) for +: 'int' and 'str'",
+      "returncode": 1,
+      "duration_ms": 172,
+      "generation_ms": 0,
+      "generation_output": "",
+      "error": {
+        "type": "Cancelled",
+        "message": "Run cancelled by the user.",
+        "line": null
+      },
+      "feedback": null,
+      "validation": null,
+      "seeded": true,
+      "exec_steps": [
+        {
+          "line": 1,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 1,
+          "event": "line",
+          "locals": {}
+        },
+        {
+          "line": 1,
+          "event": "exception",
+          "locals": {
+            "row": {
+              "region": "North",
+              "amount": "120.50"
+            }
+          },
+          "exception": {
+            "type": "GeneratorExit",
+            "message": ""
+          }
+        },
+        {
+          "line": 1,
+          "event": "exception",
+          "locals": {},
+          "exception": {
+            "type": "TypeError",
+            "message": "unsupported operand type(s) for +: 'int' and 'str'"
+          }
+        }
+      ],
+      "trace_enabled": true,
+      "trace_truncated": false,
+      "job_limit_active": true,
+      "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."
+    }
+  ],
+  "events": [
+    {
+      "phase": "generate",
+      "message": "Ready for Next stage. Loading the declared controlled first failure.",
+      "time": "2026-10-16T16:32:40.305+00:00",
+      "attempt": 1,
+      "kind": "stage_ready",
+      "sequence": 1
+    },
+    {
+      "phase": "generate",
+      "message": "Loading the declared controlled first failure.",
+      "time": "2026-10-16T16:32:41.045+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 2
+    },
+    {
+      "phase": "generate",
+      "message": "Complete candidate source is ready for inspection.",
+      "time": "2026-10-16T16:32:41.045+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 3
+    },
+    {
+      "phase": "execute",
+      "message": "Ready for Next stage. Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:32:41.045+00:00",
+      "attempt": 1,
+      "kind": "stage_ready",
+      "sequence": 4
+    },
+    {
+      "phase": "execute",
+      "message": "Executing in a constrained temporary Python subprocess.",
+      "time": "2026-10-16T16:32:41.790+00:00",
+      "attempt": 1,
+      "kind": "stage_started",
+      "sequence": 5
+    },
+    {
+      "phase": "execute",
+      "message": "Execution finished. Captured streams and source observations are available.",
+      "time": "2026-10-16T16:32:41.960+00:00",
+      "attempt": 1,
+      "kind": "stage_completed",
+      "sequence": 6
+    },
+    {
+      "phase": "evaluate",
+      "message": "Ready for Next stage. Checking the independent preset reference.",
+      "time": "2026-10-16T16:32:41.960+00:00",
+      "attempt": 1,
+      "kind": "stage_ready",
+      "sequence": 7
+    },
+    {
+      "phase": "done",
+      "message": "Run cancelled by the user.",
+      "time": "2026-10-16T16:32:42.763+00:00",
+      "attempt": null,
+      "kind": "phase",
+      "sequence": 8
+    }
+  ],
+  "stage_history": [
+    {
+      "sequence": 1,
+      "phase": "generate",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:32:40.305+00:00",
+      "started_at": "2026-10-16T16:32:41.045+00:00",
+      "finished_at": "2026-10-16T16:32:41.045+00:00",
+      "duration_ms": 0
+    },
+    {
+      "sequence": 2,
+      "phase": "execute",
+      "attempt": 1,
+      "status": "complete",
+      "ready_at": "2026-10-16T16:32:41.045+00:00",
+      "started_at": "2026-10-16T16:32:41.789+00:00",
+      "finished_at": "2026-10-16T16:32:41.960+00:00",
+      "duration_ms": 172
+    },
+    {
+      "sequence": 3,
+      "phase": "evaluate",
+      "attempt": 1,
+      "status": "cancelled",
+      "ready_at": "2026-10-16T16:32:41.960+00:00",
+      "started_at": null,
+      "finished_at": "2026-10-16T16:32:42.762+00:00",
+      "duration_ms": 0
+    }
+  ],
+  "generation_output": "",
+  "result": null,
+  "started_at": "2026-10-16T16:32:40.305+00:00",
+  "finished_at": "2026-10-16T16:32:42.762+00:00",
+  "metrics": {
+    "attempts": 1,
+    "repairs": 0,
+    "passed": false,
+    "duration_ms": 2453,
+    "generation_ms": 0,
+    "execution_ms": 172,
+    "waiting_ms": 2281
+  },
+  "validation_kind": "semantic",
+  "notice": "Scripted replay uses predetermined programs; execution observations are real, model generation is not performed."
+}

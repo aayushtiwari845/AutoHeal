@@ -1,0 +1,217 @@
+{
+  "source_commit": "711d213df71a7345a5c2fc0a2d458142d98246ae",
+  "scope": "Six cases: three fixed datasets, each with and without a labelled controlled first fault. Small descriptive evaluation; not a general model benchmark.",
+  "api_live_tested": false,
+  "runs": [
+    {
+      "run_id": "141beea0905840bf",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": true,
+      "preset": "sales",
+      "status": "succeeded",
+      "attempts": 3,
+      "duration_ms": 35844,
+      "generation_ms": 35328,
+      "trace": "docs/evidence/live-traces/sales-seeded-141beea0905840bf.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "TypeError",
+          "message": "unsupported operand type(s) for +: 'int' and 'str'",
+          "validation": false
+        },
+        {
+          "attempt": 2,
+          "type": "NameError",
+          "message": "name 'ord' is not defined",
+          "validation": false
+        }
+      ]
+    },
+    {
+      "run_id": "ab103227aa2a41e4",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": true,
+      "preset": "grades",
+      "status": "succeeded",
+      "attempts": 2,
+      "duration_ms": 14781,
+      "generation_ms": 14453,
+      "trace": "docs/evidence/live-traces/grades-seeded-ab103227aa2a41e4.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "ValidationError",
+          "message": "Output violates the task contract at $.averages.Asha, $.averages.Dev, $.averages.Kabir, $.averages.Mira, $.class_average; recompute these fields from DATA and the stated rules.",
+          "validation": false
+        }
+      ]
+    },
+    {
+      "run_id": "90b73a6bfa3d4c5a",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": true,
+      "preset": "text",
+      "status": "exhausted",
+      "attempts": 5,
+      "duration_ms": 44907,
+      "generation_ms": 43969,
+      "trace": "docs/evidence/live-traces/text-seeded-90b73a6bfa3d4c5a.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "AttributeError",
+          "message": "'str' object has no attribute 'lowercase'",
+          "validation": false
+        },
+        {
+          "attempt": 2,
+          "type": "NameError",
+          "message": "name 'collections' is not defined. Did you forget to import 'collections'?",
+          "validation": false
+        },
+        {
+          "attempt": 3,
+          "type": "PermissionError",
+          "message": "Filesystem, network, process, and native calls are denied",
+          "validation": false
+        },
+        {
+          "attempt": 4,
+          "type": "ValidationError",
+          "message": "Output violates the task contract at $.top_tokens[0], $.top_tokens[1], $.top_tokens[2]; recompute these fields from DATA and the stated rules.",
+          "validation": false
+        },
+        {
+          "attempt": 5,
+          "type": "ValidationError",
+          "message": "Output violates the task contract at $.top_tokens[0], $.top_tokens[1], $.top_tokens[2]; recompute these fields from DATA and the stated rules.",
+          "validation": false
+        }
+      ]
+    },
+    {
+      "run_id": "e8835b0c0426468b",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": false,
+      "preset": "sales",
+      "status": "exhausted",
+      "attempts": 5,
+      "duration_ms": 132875,
+      "generation_ms": 132313,
+      "trace": "docs/evidence/live-traces/sales-unseeded-e8835b0c0426468b.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "CodePolicyError",
+          "message": "DATA is preloaded and cannot be rebound; read it directly.",
+          "validation": false
+        },
+        {
+          "attempt": 2,
+          "type": "NameError",
+          "message": "name 'collections' is not defined. Did you forget to import 'collections'?",
+          "validation": false
+        },
+        {
+          "attempt": 3,
+          "type": "TypeError",
+          "message": "type str doesn't define __round__ method",
+          "validation": false
+        },
+        {
+          "attempt": 4,
+          "type": "ValidationError",
+          "message": "Output violates the task contract at $.by_region.North, $.by_region.South, $.by_region.West, $.top_region; recompute these fields from DATA and the stated rules.",
+          "validation": false
+        },
+        {
+          "attempt": 5,
+          "type": "TypeError",
+          "message": "type str doesn't define __round__ method",
+          "validation": false
+        }
+      ]
+    },
+    {
+      "run_id": "d837e0ddd4774bd8",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": false,
+      "preset": "grades",
+      "status": "succeeded",
+      "attempts": 2,
+      "duration_ms": 31297,
+      "generation_ms": 31062,
+      "trace": "docs/evidence/live-traces/grades-unseeded-d837e0ddd4774bd8.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "ValidationError",
+          "message": "Output violates the task contract at $.highest; recompute these fields from DATA and the stated rules.",
+          "validation": false
+        }
+      ]
+    },
+    {
+      "run_id": "a7e9e8b300bd41da",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": false,
+      "preset": "text",
+      "status": "exhausted",
+      "attempts": 5,
+      "duration_ms": 81640,
+      "generation_ms": 81095,
+      "trace": "docs/evidence/live-traces/text-unseeded-a7e9e8b300bd41da.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "CodePolicyError",
+          "message": "DATA is preloaded and cannot be rebound; read it directly.",
+          "validation": false
+        },
+        {
+          "attempt": 2,
+          "type": "PermissionError",
+          "message": "Filesystem, network, process, and native calls are denied",
+          "validation": false
+        },
+        {
+          "attempt": 3,
+          "type": "PermissionError",
+          "message": "Filesystem, network, process, and native calls are denied",
+          "validation": false
+        },
+        {
+          "attempt": 4,
+          "type": "PermissionError",
+          "message": "Filesystem, network, process, and native calls are denied",
+          "validation": false
+        },
+        {
+          "attempt": 5,
+          "type": "PermissionError",
+          "message": "Filesystem, network, process, and native calls are denied",
+          "validation": false
+        }
+      ]
+    }
+  ]
+}

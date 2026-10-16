@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "results": [
+    "Initial grade sample is visible and explicitly prewritten.",
+    "grades: automatic replay validates in 2 attempts; first failure, trace navigation, diff, wrap toggle pass.",
+    "sales: automatic replay validates in 2 attempts; first failure, trace navigation, diff, wrap toggle pass.",
+    "text: automatic replay validates in 2 attempts; first failure, trace navigation, diff, wrap toggle pass.",
+    "Manual replay gates exactly Generate→Execute→Evaluate→Reflect→Generate→Execute→Evaluate; sticky Next controller stays at viewport top.",
+    "Custom mode has editable task/DATA, structural-only disclosure, and disables controlled fault/replay.",
+    "390×768: no horizontal page overflow.",
+    "1366×768: no horizontal page overflow.",
+    "About dialog opens, includes both credits, and closes by Escape.",
+    "No page errors or console errors."
+  ],
+  "errors": []
+}

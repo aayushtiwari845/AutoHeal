@@ -1,0 +1,150 @@
+{
+  "source_commit": "075598e6576cd65bec2a8a388e313bea75953a79",
+  "scope": "Six cases: three fixed datasets, each with and without a labelled controlled first fault. Small descriptive evaluation; not a general model benchmark.",
+  "api_live_tested": false,
+  "runs": [
+    {
+      "run_id": "8b89d9f993b741c1",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": true,
+      "preset": "sales",
+      "status": "succeeded",
+      "attempts": 3,
+      "duration_ms": 42406,
+      "generation_ms": 41953,
+      "trace": "docs/evidence/live-traces/sales-seeded-8b89d9f993b741c1.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "TypeError",
+          "message": "unsupported operand type(s) for +: 'int' and 'str'",
+          "validation": false
+        },
+        {
+          "attempt": 2,
+          "type": "NameError",
+          "message": "name 'ord' is not defined",
+          "validation": false
+        }
+      ]
+    },
+    {
+      "run_id": "a288d3c175534a4d",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": true,
+      "preset": "grades",
+      "status": "succeeded",
+      "attempts": 2,
+      "duration_ms": 18297,
+      "generation_ms": 17938,
+      "trace": "docs/evidence/live-traces/grades-seeded-a288d3c175534a4d.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "ValidationError",
+          "message": "Output violates the task contract at $.averages.Asha, $.averages.Dev, $.averages.Kabir, $.averages.Mira, $.class_average; recompute these fields from DATA and the stated rules.",
+          "validation": false
+        }
+      ]
+    },
+    {
+      "run_id": "9c6cc66d8c874fb9",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": true,
+      "preset": "text",
+      "status": "succeeded",
+      "attempts": 3,
+      "duration_ms": 23875,
+      "generation_ms": 23313,
+      "trace": "docs/evidence/live-traces/text-seeded-9c6cc66d8c874fb9.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "AttributeError",
+          "message": "'str' object has no attribute 'lowercase'",
+          "validation": false
+        },
+        {
+          "attempt": 2,
+          "type": "ValidationError",
+          "message": "Output violates the task contract at $.document_count, $.frequencies, $.top_tokens, $.unique_tokens; recompute these fields from DATA and the stated rules.",
+          "validation": false
+        }
+      ]
+    },
+    {
+      "run_id": "a3e0691e4a444b90",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": false,
+      "preset": "sales",
+      "status": "succeeded",
+      "attempts": 3,
+      "duration_ms": 168062,
+      "generation_ms": 167890,
+      "trace": "docs/evidence/live-traces/sales-unseeded-a3e0691e4a444b90.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "SyntaxError",
+          "message": "unterminated string literal (detected at line 3)",
+          "validation": false
+        },
+        {
+          "attempt": 2,
+          "type": "CodePolicyError",
+          "message": "DATA is preloaded and cannot be rebound; read it directly.",
+          "validation": false
+        }
+      ]
+    },
+    {
+      "run_id": "3d6279cad7104a66",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": false,
+      "preset": "grades",
+      "status": "succeeded",
+      "attempts": 2,
+      "duration_ms": 44031,
+      "generation_ms": 43859,
+      "trace": "docs/evidence/live-traces/grades-unseeded-3d6279cad7104a66.json",
+      "failures": [
+        {
+          "attempt": 1,
+          "type": "CodePolicyError",
+          "message": "DATA is preloaded and cannot be rebound; read it directly.",
+          "validation": false
+        }
+      ]
+    },
+    {
+      "run_id": "044ad6c0db294737",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "flow": "auto",
+      "mode": "live",
+      "seeded": false,
+      "preset": "text",
+      "status": "succeeded",
+      "attempts": 1,
+      "duration_ms": 18562,
+      "generation_ms": 18406,
+      "trace": "docs/evidence/live-traces/text-unseeded-044ad6c0db294737.json",
+      "failures": []
+    }
+  ]
+}
