@@ -1,16 +1,19 @@
-[
-  {
-    "name": "AutoHeal tests",
-    "status": "completed",
-    "conclusion": "success",
-    "head_sha": "ba76be6fd7a4b9c01c1a1f1724cfa16b306f0609",
-    "html_url": "https://github.com/aayushtiwari845/AutoHeal/actions/runs/38934096080"
-  },
-  {
-    "name": "AutoHeal tests",
-    "status": "completed",
-    "conclusion": "success",
-    "head_sha": "e5a064a7f31ac2c452127edef850e8b99066be6f",
-    "html_url": "https://github.com/aayushtiwari845/AutoHeal/actions/runs/38933564801"
-  }
-]
+{
+  "source_commit": "c3ba20afe522a9c41b921342fc22444d8e17b4a0",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/aayushtiwari845/AutoHeal/actions/runs/38936939670",
+  "completed_at": "2026-10-16T17:05:37Z",
+  "jobs": [
+    {
+      "name": "backend (ubuntu-latest)",
+      "conclusion": "success",
+      "html_url": "https://github.com/aayushtiwari845/AutoHeal/actions/runs/38936939670/job/117094693721"
+    },
+    {
+      "name": "backend (windows-latest)",
+      "conclusion": "success",
+      "html_url": "https://github.com/aayushtiwari845/AutoHeal/actions/runs/38936939670/job/117094694199"
+    }
+  ]
+}

@@ -1052,13 +1052,13 @@
         },
         {
           "type": "p",
-          "text": "The Windows and Linux GitHub Actions jobs also passed for implementation revision e5a064a. This cross-platform check verifies the test suite on both runners; it is separate from the laptop latency measurements.",
+          "text": "Windows CI exposed a TCP reset when an early rejected POST left request bytes unread. HTTP 403/415 handling now drains a declared body of at most 32KB within a 250ms deadline before closing. Access guards stay unchanged. Repeated-rejection and incomplete-body regressions pass in the 63-test suite. Both Windows and Linux CI jobs subsequently passed.",
           "size": 10.3
         },
         {
           "type": "link",
-          "label": "GitHub Actions verification run 38933564801",
-          "url": "https://github.com/aayushtiwari845/AutoHeal/actions/runs/38933564801",
+          "label": "Current GitHub Actions verification run 38936939670",
+          "url": "https://github.com/aayushtiwari845/AutoHeal/actions/runs/38936939670",
           "size": 9.6
         }
       ]
@@ -1068,7 +1068,7 @@
       "blocks": [
         {
           "type": "p",
-          "text": "The table records the current evaluation cases associated with this implementation revision. Each entry has a saved trace. Durations cover complete runs rather than only Python execution. Manual flow may include time spent waiting for human continuation and should not be compared directly with uninterrupted automatic latency."
+          "text": "The six model cases were measured at revision 075598e, before the later HTTP-only correction. Model generation, Python execution and validation are identical in the current revision, so these traces remain applicable. Durations cover complete automatic runs. The separate manual screenshot run may include human waiting and should not be compared directly with this latency."
         },
         {
           "type": "results"
