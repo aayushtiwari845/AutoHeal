@@ -5,6 +5,7 @@ import mimetypes
 from pathlib import Path
 import platform
 import re
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
@@ -48,17 +49,55 @@ class Handler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             pass
 
+    def _discard_small_body(self):
+        """Consume a bounded rejected POST body before closing its connection.
+
+        Closing with unread request bytes can reset TCP on Windows before the
+        rejection response reaches the client. Never wait for an unbounded or
+        slowly delivered body merely to produce a 403/415 response.
+        """
+        self.close_connection = True
+        if self.headers.get("Transfer-Encoding"):
+            return
+        try:
+            remaining = int(self.headers.get("Content-Length", "0"))
+        except (TypeError, ValueError):
+            return
+        if not 0 < remaining <= MAX_BODY:
+            return
+        previous_timeout = self.connection.gettimeout()
+        deadline = time.monotonic() + 0.25
+        try:
+            while remaining:
+                budget = deadline - time.monotonic()
+                if budget <= 0:
+                    break
+                self.connection.settimeout(budget)
+                chunk = self.rfile.read1(min(remaining, 8192))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+        except (OSError, ValueError):
+            pass
+        finally:
+            self.connection.settimeout(previous_timeout)
+
     def _local_request(self, mutation=False):
         port = self.server.server_port
         hosts = {f"127.0.0.1:{port}", f"localhost:{port}"}
         if self.headers.get("Host") not in hosts:
+            if mutation:
+                self._discard_small_body()
             self._json({"error": "Only the local dashboard host is accepted."}, 403)
             return False
         origin = self.headers.get("Origin")
         if origin and origin not in {f"http://{host}" for host in hosts}:
+            if mutation:
+                self._discard_small_body()
             self._json({"error": "Cross-origin requests are not accepted."}, 403)
             return False
         if mutation and self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower() != "application/json":
+            self._discard_small_body()
             self._json({"error": "Mutating requests require application/json."}, 415)
             return False
         return True

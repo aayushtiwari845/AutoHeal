@@ -379,16 +379,33 @@ class APITests(unittest.TestCase):
         self.assertEqual(data["service"], "autoheal-studio")
 
     def test_cross_origin_mutation_is_denied(self):
-        status, _ = self.request("POST", "/api/runs", "{}", {"Content-Type": "application/json", "Origin": "https://attacker.example"})
-        self.assertEqual(status, 403)
+        for _ in range(5):
+            status, _ = self.request("POST", "/api/runs", "{}", {"Content-Type": "application/json", "Origin": "https://attacker.example"})
+            self.assertEqual(status, 403)
 
     def test_simple_form_post_is_denied(self):
-        status, _ = self.request("POST", "/api/runs", "{}", {"Content-Type": "text/plain"})
-        self.assertEqual(status, 415)
+        for _ in range(5):
+            status, _ = self.request("POST", "/api/runs", "{" + "x" * 2048 + "}", {"Content-Type": "text/plain"})
+            self.assertEqual(status, 415)
+        # A declared but incomplete rejected body must not prevent a response.
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
+        try:
+            connection.putrequest("POST", "/api/runs")
+            connection.putheader("Content-Type", "text/plain")
+            connection.putheader("Content-Length", "10")
+            connection.endheaders()
+            response = connection.getresponse()
+            self.assertEqual(response.status, 415)
+            response.read()
+        finally:
+            connection.close()
 
     def test_rebinding_host_is_denied(self):
         status, _ = self.request("GET", "/api/presets", headers={"Host": "attacker.example"})
         self.assertEqual(status, 403)
+        for _ in range(5):
+            status, _ = self.request("POST", "/api/runs", "{}", {"Host": "attacker.example", "Content-Type": "application/json"})
+            self.assertEqual(status, 403)
 
     def test_presets_exclude_replay_sources(self):
         status, data = self.request("GET", "/api/presets")
