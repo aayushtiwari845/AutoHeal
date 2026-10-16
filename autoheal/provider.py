@@ -228,7 +228,10 @@ def generate(model, task, data, previous=None, feedback=None, cancel_event=None,
         result.update(duration_ms=round((time.monotonic() - started) * 1000), provider=provider)
         return result
     except HTTPError as exc:
-        detail = exc.read(1800).decode("utf-8", "replace")
+        try:
+            detail = exc.read(1800).decode("utf-8", "replace")
+        finally:
+            exc.close()
         if secret:
             detail = detail.replace(secret, "[redacted]")
         raise ProviderError(f"Provider HTTP {exc.code}: {detail[:500]}") from None

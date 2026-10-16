@@ -11,9 +11,12 @@ import sys
 import tempfile
 import threading
 import time
+import uuid
 
 MAX_CODE = 24000
 MAX_OUTPUT = 16000
+MAX_TRACE_STEPS = 200
+MAX_TRACE_BYTES = 24000
 ALLOWED_MODULES = {"json", "math", "statistics", "collections", "re"}
 ALLOWED_EXPORTS = {
     "json": {"dumps", "loads", "JSONDecodeError"},
@@ -43,7 +46,10 @@ def inspect_code(code):
                 module_aliases[alias.asname or alias.name] = alias.name
     for node in ast.walk(tree):
         problem = None
-        if isinstance(node, ast.Import):
+        rebinds_data = (isinstance(node, ast.Name) and node.id == "DATA" and isinstance(node.ctx, (ast.Store, ast.Del))) or (isinstance(node, ast.arg) and node.arg == "DATA") or (isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) and node.name == "DATA") or (isinstance(node, ast.ExceptHandler) and node.name == "DATA") or (isinstance(node, (ast.Import, ast.ImportFrom)) and any(alias.asname == "DATA" for alias in node.names))
+        if rebinds_data:
+            problem = "DATA is preloaded and cannot be rebound; read it directly."
+        elif isinstance(node, ast.Import):
             if any(alias.name not in ALLOWED_MODULES for alias in node.names):
                 problem = "Only json, math, statistics, collections, and re may be imported."
         elif isinstance(node, ast.ImportFrom):
@@ -135,8 +141,8 @@ def _attach_job(process):
     return (kernel, job)
 
 
-def _harness(code, data):
-    return "\n".join([
+def _harness(code, data, trace_execution=True, trace_prefix=""):
+    setup = "\n".join([
         "import builtins, json, math, statistics, collections, re, sys",
         "_modules = {name: globals()[name] for name in ('json', 'math', 'statistics', 'collections', 're')}",
         f"_safe = {{name: getattr(builtins, name) for name in {SAFE_BUILTINS!r}}}",
@@ -159,21 +165,111 @@ def _harness(code, data):
         "    if event == 'open' or event == 'import' or event.startswith(('os.', 'socket.', 'subprocess.', 'ctypes.', 'shutil.')):",
         "        raise PermissionError('Filesystem, network, process, and native calls are denied')",
         "sys.addaudithook(_audit)",
-        "exec(_compiled, _env, _env)",
     ])
+    if not trace_execution:
+        return setup + "\nexec(_compiled, _env, _env)\n"
+    tracing = '''
+_trace_prefix = __TRACE_PREFIX__
+_trace_count = 0
+_trace_size = 0
+_trace_truncated = False
+_secret_names = ('api_key', 'access_token', 'secret', 'password', 'credential', 'authorization', 'private_key')
+def _sensitive(name):
+    return any(part in name.lower() for part in _secret_names)
+def _safe_value(value, depth=0):
+    kind = type(value)
+    if kind is type(None) or kind is bool:
+        return value
+    if kind is int:
+        return value if value.bit_length() <= 256 else '<large integer>'
+    if kind is float:
+        return value if math.isfinite(value) else '<non-finite number>'
+    if kind is str:
+        return value[:160] + ('...' if len(value) > 160 else '')
+    if depth >= 2:
+        return '<maximum depth>'
+    if kind in (list, tuple):
+        values = [_safe_value(item, depth + 1) for item in value[:6]]
+        if len(value) > 6: values.append('<items omitted>')
+        return values
+    if kind in (set, frozenset):
+        values = []
+        for index, item in enumerate(value):
+            if index >= 6:
+                values.append('<items omitted>')
+                break
+            values.append(_safe_value(item, depth + 1))
+        return values
+    if kind is dict:
+        values = {}
+        for index, (key, item) in enumerate(value.items()):
+            if index >= 6:
+                values['<items omitted>'] = True
+                break
+            if type(key) not in (str, int, float, bool, type(None)):
+                continue
+            key = str(_safe_value(key))[:80]
+            values[key] = '<redacted>' if _sensitive(key) else _safe_value(item, depth + 1)
+        return values
+    return '<non-primitive value omitted>'
+def _local_values(frame):
+    result = {}
+    for name, value in frame.f_locals.items():
+        if len(result) >= 12: break
+        if name == 'DATA' or name.startswith('_') or not name.isidentifier(): continue
+        if _sensitive(name):
+            result[name] = '<redacted>'
+        elif type(value) in (type(None), bool, int, float, str, list, tuple, dict, set, frozenset):
+            result[name] = _safe_value(value)
+    return result
+def _emit_trace(record):
+    sys.stderr.write(_trace_prefix + json.dumps(record, ensure_ascii=True, allow_nan=False) + '\\n')
+    sys.stderr.flush()
+def _trace(frame, event, arg):
+    global _trace_count, _trace_size, _trace_truncated
+    if frame.f_code.co_filename != '<generated>': return None
+    if event not in ('line', 'exception'): return _trace
+    try:
+        record = {'line': frame.f_lineno, 'event': event, 'locals': _local_values(frame)}
+        if event == 'exception':
+            record['exception'] = {'type': arg[0].__name__, 'message': str(arg[1])[:240]}
+        size = len(json.dumps(record, ensure_ascii=True, allow_nan=False))
+        if _trace_count >= __TRACE_LIMIT__ or _trace_size + size > __TRACE_BYTES__:
+            _trace_truncated = True
+            _emit_trace({'event': 'trace_limit', 'truncated': True})
+            sys.settrace(None)
+            return None
+        _trace_count += 1
+        _trace_size += size
+        _emit_trace(record)
+    except Exception:
+        _trace_truncated = True
+        sys.settrace(None)
+        return None
+    return _trace
+sys.settrace(_trace)
+try:
+    exec(_compiled, _env, _env)
+finally:
+    sys.settrace(None)
+    _emit_trace({'event': 'trace_end', 'truncated': _trace_truncated, 'count': _trace_count})
+'''
+    tracing = tracing.replace("__TRACE_PREFIX__", repr(trace_prefix)).replace("__TRACE_LIMIT__", str(MAX_TRACE_STEPS)).replace("__TRACE_BYTES__", str(MAX_TRACE_BYTES))
+    return setup + "\n" + tracing
 
 
-def execute_code(code, data, timeout=5, cancel_event=None):
+def execute_code(code, data, timeout=5, cancel_event=None, trace_execution=True, progress_callback=None):
     started = time.monotonic()
     error = inspect_code(code)
-    base = {"stdout": "", "stderr": "", "returncode": None, "duration_ms": 0, "error": error, "output": None, "job_limit_active": False}
+    base = {"stdout": "", "stderr": "", "returncode": None, "duration_ms": 0, "error": error, "output": None, "job_limit_active": False, "exec_steps": [], "trace_enabled": bool(trace_execution), "trace_truncated": False, "execution_observation": "Actual CPython line events captured before the source line executes; recorded observations, not an interactive OS debugger."}
     if error:
         base["stderr"] = f"{error['type']}: {error['message']}"
         return base
     timeout = max(1.0, min(float(timeout), 5.0))
     with tempfile.TemporaryDirectory(prefix="autoheal-run-") as directory:
         path = Path(directory) / "runner.py"
-        path.write_text(_harness(code, data), encoding="utf-8")
+        trace_prefix = "\x1eAUTOHEAL_" + uuid.uuid4().hex + ":"
+        path.write_text(_harness(code, data, trace_execution, trace_prefix), encoding="utf-8")
         # An allowlist ensures provider keys and unrelated environment secrets
         # never enter the generated-program process.
         env = {name: os.environ[name] for name in ("SYSTEMROOT", "WINDIR", "COMSPEC") if name in os.environ}
@@ -183,18 +279,66 @@ def execute_code(code, data, timeout=5, cancel_event=None):
         base["job_limit_active"] = bool(job)
         buffers = {"stdout": bytearray(), "stderr": bytearray()}
         over_budget = threading.Event()
+        trace_size = 0
+
+        def publish():
+            if progress_callback:
+                try:
+                    progress_callback({"stdout": compact_output(buffers["stdout"].decode("utf-8", "replace")), "stderr": compact_output(buffers["stderr"].decode("utf-8", "replace").replace(directory, "<temporary workspace>")), "exec_steps": list(base["exec_steps"]), "trace_truncated": base["trace_truncated"], "duration_ms": round((time.monotonic() - started) * 1000)})
+                except Exception:
+                    # An observer must never change generated-program behavior.
+                    pass
+
+        def capture(chunk, target):
+            remaining = MAX_OUTPUT + 4096 - len(buffers[target])
+            if remaining > 0:
+                buffers[target].extend(chunk[:remaining])
+            if remaining < len(chunk):
+                over_budget.set()
+
+        def stderr_line(line):
+            nonlocal trace_size
+            prefix = trace_prefix.encode("utf-8")
+            if line.startswith(prefix):
+                try:
+                    record = json.loads(line[len(prefix):])
+                    if record.get("event") in {"trace_limit", "trace_end"}:
+                        base["trace_truncated"] = base["trace_truncated"] or bool(record.get("truncated"))
+                    elif record.get("event") in {"line", "exception"} and isinstance(record.get("line"), int):
+                        size = len(json.dumps(record, ensure_ascii=True))
+                        if len(base["exec_steps"]) < MAX_TRACE_STEPS and trace_size + size <= MAX_TRACE_BYTES:
+                            base["exec_steps"].append(record)
+                            trace_size += size
+                        else:
+                            base["trace_truncated"] = True
+                    return
+                except (ValueError, TypeError, AttributeError):
+                    pass
+            capture(line, "stderr")
 
         def drain(stream, target):
+            pending = bytearray()
             try:
                 while True:
-                    chunk = stream.read(4096)
+                    chunk = stream.read1(4096)
                     if not chunk:
+                        if pending:
+                            stderr_line(bytes(pending))
+                            publish()
                         return
-                    remaining = MAX_OUTPUT + 4096 - len(buffers[target])
-                    if remaining > 0:
-                        buffers[target].extend(chunk[:remaining])
-                    if remaining < len(chunk):
-                        over_budget.set()
+                    if target == "stderr":
+                        pending.extend(chunk)
+                        while b"\n" in pending:
+                            line, _, rest = pending.partition(b"\n")
+                            pending[:] = rest
+                            stderr_line(bytes(line) + b"\n")
+                        if len(pending) > MAX_OUTPUT + MAX_TRACE_BYTES:
+                            capture(bytes(pending), target)
+                            pending.clear()
+                    else:
+                        capture(chunk, target)
+                    publish()
+                    if over_budget.is_set():
                         return
             except (OSError, ValueError):
                 return

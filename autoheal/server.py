@@ -8,9 +8,10 @@ import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
-from .engine import RunManager
+from .engine import AdvanceConflict, RunManager
+from .executor import MAX_TRACE_STEPS, MAX_TRACE_BYTES
 from .presets import public_presets
-from .provider import ollama_status
+from .provider import ollama_status, provider_catalog
 
 WEB_DIR = Path(__file__).resolve().parent / "web"
 MANAGER = RunManager()
@@ -18,7 +19,7 @@ MAX_BODY = 32000
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "AutoHeal/1.0"
+    server_version = "AutoHeal/2.0"
     sys_version = ""
 
     def log_message(self, format, *args):
@@ -70,7 +71,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         path = urlsplit(self.path).path
         if path == "/api/status":
-            self._json({"service": "autoheal-studio", **ollama_status(), "python": platform.python_version(), "safety": "Defense-in-depth constrained subprocess, not a hard OS security sandbox. Local trusted demonstrations only.", "limits": {"max_attempts": 5, "max_execution_seconds": 5, "max_output_characters": 16000, "max_code_characters": 24000, "memory_mb": 384, "memory_limit": "Windows Job Object; best effort, per-attempt active flag in trace"}, "version": "1.0.0"})
+            local_status = ollama_status()
+            self._json({"service": "autoheal-studio", **local_status, **provider_catalog(local=local_status), "python": platform.python_version(), "safety": "Defense-in-depth constrained subprocess, not a hard OS security sandbox. Local trusted demonstrations only.", "limits": {"max_attempts": 5, "max_execution_seconds": 5, "max_output_characters": 16000, "max_code_characters": 24000, "memory_mb": 384, "memory_limit": "Windows Job Object; best effort, per-attempt active flag in trace", "max_trace_steps": MAX_TRACE_STEPS, "max_trace_bytes": MAX_TRACE_BYTES, "max_custom_data_characters": 12000}, "control_modes": ["auto", "manual"], "trace_semantics": "Actual generated-source CPython line events before execution; capped recorded observations. Manual stepping pauses between phases, not individual Python instructions.", "version": "2.0.0"})
             return
         if path == "/api/presets":
             self._json({"presets": public_presets()})
@@ -112,8 +114,11 @@ class Handler(BaseHTTPRequestHandler):
                 return
             body = self.rfile.read(length)
             config = json.loads(body or b"{}")
-        except (ValueError, UnicodeError):
+        except (ValueError, UnicodeError, RecursionError):
             self._json({"error": "Request body must be valid JSON."}, 400)
+            return
+        if not isinstance(config, dict):
+            self._json({"error": "Request body must be a JSON object."}, 400)
             return
         path = urlsplit(self.path).path
         if path == "/api/runs":
@@ -127,6 +132,15 @@ class Handler(BaseHTTPRequestHandler):
         match = re.fullmatch(r"/api/runs/([a-f0-9]{16})/cancel", path)
         if match:
             state = MANAGER.cancel(match.group(1))
+            self._json(state if state else {"error": "Run not found."}, 200 if state else 404)
+            return
+        match = re.fullmatch(r"/api/runs/([a-f0-9]{16})/advance", path)
+        if match:
+            try:
+                state = MANAGER.advance(match.group(1), config.get("step_token"))
+            except AdvanceConflict as exc:
+                self._json({"error": str(exc), "run": MANAGER.snapshot(match.group(1))}, 409)
+                return
             self._json(state if state else {"error": "Run not found."}, 200 if state else 404)
             return
         self._json({"error": "Unknown API route."}, 404)

@@ -30,7 +30,31 @@ PRESETS = {
         "expected": {"total": 520.0, "valid_rows": 6, "rejected_rows": 2, "by_region": {"North": 160.0, "South": 180.0, "West": 180.0}, "top_region": "South"},
         "challenge": "The controlled first attempt tries to sum raw strings and raises TypeError.",
         "seed_code": "total = sum(row['amount'] for row in DATA)\nprint(json.dumps({'total': total}))",
-        "replay_code": "totals = {}\nvalid = 0\nrejected = 0\nfor row in DATA:\n    try:\n        value = float(row['amount'].strip())\n    except (ValueError, TypeError):\n        rejected += 1\n        continue\n    valid += 1\n    totals[row['region']] = totals.get(row['region'], 0.0) + value\nresult = {'total': round(sum(totals.values()), 2), 'valid_rows': valid, 'rejected_rows': rejected, 'by_region': {k: round(v, 2) for k, v in sorted(totals.items())}, 'top_region': sorted(totals, key=lambda k: (-totals[k], k))[0]}\nprint(json.dumps(result))",
+        "replay_code": """totals = {}
+valid = 0
+rejected = 0
+
+for row in DATA:
+    try:
+        value = float(row['amount'].strip())
+    except (ValueError, TypeError):
+        rejected += 1
+        continue
+    valid += 1
+    region = row['region']
+    totals[region] = totals.get(region, 0.0) + value
+
+result = {
+    'total': round(sum(totals.values()), 2),
+    'valid_rows': valid,
+    'rejected_rows': rejected,
+    'by_region': {
+        region: round(total, 2)
+        for region, total in sorted(totals.items())
+    },
+    'top_region': sorted(totals, key=lambda region: (-totals[region], region))[0],
+}
+print(json.dumps(result, indent=2))""",
     },
     "text": {
         "id": "text", "title": "Normalized text analytics",
@@ -40,7 +64,24 @@ PRESETS = {
         "expected": {"document_count": 3, "token_count": 14, "unique_tokens": 7, "frequencies": {"ai": 3, "heals": 1, "code": 4, "helps": 1, "reliable": 3, "results": 1, "tests": 1}, "top_tokens": [{"token": "code", "count": 4}, {"token": "ai", "count": 3}, {"token": "reliable", "count": 3}]},
         "challenge": "The controlled first attempt calls a missing lowercase method and raises AttributeError.",
         "seed_code": "words = ' '.join(DATA).lowercase().split()\nprint(json.dumps({'token_count': len(words)}))",
-        "replay_code": "import re\nfrom collections import Counter\nwords = re.findall(r'[A-Za-z]+', ' '.join(DATA).lower())\ncounts = dict(Counter(words))\nranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:3]\nprint(json.dumps({'document_count': len(DATA), 'token_count': len(words), 'unique_tokens': len(counts), 'frequencies': counts, 'top_tokens': [{'token': token, 'count': count} for token, count in ranked]}))",
+        "replay_code": """import re
+from collections import Counter
+
+words = re.findall(r'[A-Za-z]+', ' '.join(DATA).lower())
+counts = dict(Counter(words))
+ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:3]
+
+result = {
+    'document_count': len(DATA),
+    'token_count': len(words),
+    'unique_tokens': len(counts),
+    'frequencies': counts,
+    'top_tokens': [
+        {'token': token, 'count': count}
+        for token, count in ranked
+    ],
+}
+print(json.dumps(result, indent=2))""",
     },
     "grades": {
         "id": "grades", "title": "Weighted grade evaluation",
@@ -49,8 +90,43 @@ PRESETS = {
         "data": GRADES_DATA,
         "expected": {"averages": {"Asha": 78.0, "Kabir": 77.0, "Mira": 95.6, "Dev": 50.5}, "class_average": 75.28, "passed": ["Asha", "Kabir", "Mira"], "highest": "Mira"},
         "challenge": "The controlled first attempt runs successfully but uses an unweighted mean, so the semantic validator rejects it.",
-        "seed_code": "averages = {row['name']: round(sum(row['scores']) / 3, 2) for row in DATA}\nprint(json.dumps({'averages': averages, 'class_average': round(sum(averages.values()) / len(averages), 2), 'passed': sorted(name for name, value in averages.items() if value >= 60), 'highest': max(averages, key=averages.get)}))",
-        "replay_code": "weights = [0.2, 0.3, 0.5]\nraw = {row['name']: sum(score * weight for score, weight in zip(row['scores'], weights)) for row in DATA}\nprint(json.dumps({'averages': {name: round(value, 2) for name, value in raw.items()}, 'class_average': round(sum(raw.values()) / len(raw), 2), 'passed': sorted(name for name, value in raw.items() if value >= 60), 'highest': sorted(raw, key=lambda name: (-raw[name], name))[0]}))",
+        "seed_code": """# Controlled fault: this uses a simple mean instead of assessment weights.
+averages = {}
+for student in DATA:
+    scores = student['scores']
+    averages[student['name']] = round(sum(scores) / 3, 2)
+
+result = {
+    'averages': averages,
+    'class_average': round(sum(averages.values()) / len(averages), 2),
+    'passed': sorted(name for name, value in averages.items() if value >= 60),
+    'highest': max(averages, key=averages.get),
+}
+print(json.dumps(result, indent=2))""",
+        "replay_code": """weights = [0.2, 0.3, 0.5]
+raw_scores = {}
+
+for student in DATA:
+    weighted_score = sum(
+        score * weight
+        for score, weight in zip(student['scores'], weights)
+    )
+    raw_scores[student['name']] = weighted_score
+
+result = {
+    'averages': {
+        name: round(value, 2)
+        for name, value in raw_scores.items()
+    },
+    'class_average': round(sum(raw_scores.values()) / len(raw_scores), 2),
+    'passed': sorted(
+        name for name, value in raw_scores.items() if value >= 60
+    ),
+    'highest': sorted(
+        raw_scores, key=lambda name: (-raw_scores[name], name)
+    )[0],
+}
+print(json.dumps(result, indent=2))""",
     },
 }
 
@@ -86,6 +162,8 @@ def public_presets():
         item = {k: copy.deepcopy(v) for k, v in preset.items() if not k.endswith("code")}
         item["task"] = item["prompt"]
         item["expected_keys"] = list(item["expected"])
+        item["seed_preview"] = {"code": preset["seed_code"], "description": preset["challenge"], "provenance": "Prewritten controlled first failure; not model generated.", "expected_failure": "ValidationError" if preset["id"] == "grades" else "TypeError" if preset["id"] == "sales" else "AttributeError"}
+        item["task_contract"] = {"validation_kind": "semantic", "expected_keys": list(preset["expected"]), "rules": copy.deepcopy(FIELD_RULES[preset["id"]])}
         result.append(item)
     return result
 
