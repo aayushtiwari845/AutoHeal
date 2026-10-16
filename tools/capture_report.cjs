@@ -21,13 +21,17 @@ const entries={};
   async function read(id){return (await page.request.get(BASE+'/api/runs/'+id)).json();}
   async function uiSync(id,predicate){let result;for(let i=0;i<1400;i++){result=await read(id);if(predicate(result)){
    const latest=result.attempts.at(-1);
-   await page.waitForFunction(({id,count,code,status})=>{
+   await page.waitForFunction(({id,count,code,status,waiting,nextPhase,stdout,stderr,exit})=>{
     if(!document.querySelector('#runFootnote').textContent.includes(id))return false;
     if(count&&document.querySelector('#attemptSelect').value!==String(count-1))return false;
+    if(waiting){const label=nextPhase[0].toUpperCase()+nextPhase.slice(1);if(document.querySelector('#advanceButton').textContent!==`Next: ${label} →`)return false;}
+    if(count&&document.querySelector('#stderr').textContent!==(stderr||'(empty stderr)'))return false;
+    if(count&&document.querySelector('#stdout').textContent!==(stdout||'(empty stdout)'))return false;
+    if(count&&document.querySelector('#exitMetric').textContent!==`Exit ${exit??'—'}`)return false;
     if(code){const displayed=[...document.querySelectorAll('#codePane .line-text')].map(e=>e.textContent.trimEnd()).join('\n').trim();if(displayed!==code.split('\n').map(s=>s.trimEnd()).join('\n').trim())return false;}
     const label=document.querySelector('#runStatus').textContent;
     return status==='succeeded'?label==='VALIDATED':status==='cancelled'?label==='STOPPED':true;
-   },{id,count:result.attempts.length,code:latest?.code||'',status:result.status},{timeout:15000});
+   },{id,count:result.attempts.length,code:latest?.code||'',status:result.status,waiting:result.awaiting_step,nextPhase:result.next_phase,stdout:latest?.stdout,stderr:latest?.stderr,exit:latest?.returncode},{timeout:15000});
    return result;
   }await page.waitForTimeout(150);}throw Error('State timeout '+JSON.stringify(result));}
   async function begin(preset,control='manual'){
@@ -63,7 +67,7 @@ const entries={};
   await shot('diff','06-source-changes','.source-window','The Changes view compares the actual first and second candidate sources.','Added and removed lines are computed from stored source using an LCS comparison; code remains selectable with true source line numbers.',state);
   await page.locator('#sourceTab').click();await advance(grade,'evaluate',2);await page.locator('#advanceButton').click();state=await uiSync(grade,s=>s.status==='succeeded');
   await page.locator('#feedbackDisclosure').evaluate(e=>e.open=false);await page.locator('#resultDisclosure').evaluate(e=>e.open=false);
-  await shot('validation','07-independent-validation','.evaluation-window','Grade replay terminates after the independent reference checks pass.','All fixed-preset result fields pass. The displayed final JSON is the program output, and the loop stops at attempt 2.',state);
+  await shot('validation','07-independent-validation','.evaluation-window','Grade replay terminates after the independent reference checks pass.','All fixed-preset result fields pass and the loop stops at attempt 2. Final output is available in the JSON disclosure and export.',state);
   fs.writeFileSync(path.join(EVIDENCE,`manual-grades-${grade}.json`),JSON.stringify(state,null,2)+'\n');
   await page.locator('#localsDisclosure').evaluate(e=>e.open=true);
   for(let i=0;i<8;i++)await page.locator('#nextTrace').click();
@@ -73,6 +77,8 @@ const entries={};
   const exportPage=await browser.newPage({viewport:{width:800,height:430}});await exportPage.goto(BASE+'/api/runs/'+grade);await exportPage.screenshot({path:path.join(DIR,'09-actual-trace-json.png'),fullPage:false});
   entries.export={file:'docs/screenshots/09-actual-trace-json.png',caption:'The exported run is machine-readable JSON with exact input, candidates, execution and stage evidence.',observation:'The dashboard Export trace button downloaded this same run; its ID was checked against the current run. The browser view shows the real API snapshot, with no manufactured fields.',run_id:grade,mode:'replay',control_mode:'manual',redaction:'No credentials; fixed teaching data.'};await exportPage.close();
   const sales=await begin('sales');await uiSync(sales,s=>s.awaiting_step);await advance(sales,'execute',1);state=await advance(sales,'evaluate',1);
+  assert.ok((await page.locator('#stderr').innerText()).includes('TypeError'));
+  assert.equal(await page.locator('#exitMetric').innerText(),'Exit 1');
   await shot('execution_failure','10-runtime-traceback','.output-window','A separate sales replay demonstrates a real Python exception and traceback.','Attempt 1 sums raw string amounts using sum, whose starting value is numeric zero. Python exits with a TypeError; stdout, stderr, exit code and elapsed process time are captured.',state);
   await page.locator('#stopButton').click();state=await uiSync(sales,s=>s.status==='cancelled');fs.writeFileSync(path.join(EVIDENCE,`manual-sales-${sales}.json`),JSON.stringify(state,null,2)+'\n');
   const auto=await begin('text','auto');state=await uiSync(auto,s=>s.status==='succeeded');

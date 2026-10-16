@@ -69,4 +69,6 @@ node --check autoheal/web/app.js
 
 The backend suite covers independent preset references, executor restrictions, output contracts, cancellation, provider handling, manual gate tokens, recorded traces, custom data, and local HTTP protections. It uses mocked providers and needs no paid API or model access. Node is optional for the JavaScript syntax check and is not an application dependency.
 
+Optional browser checks in `tools/qa_dashboard.cjs` require Playwright and Microsoft Edge on Windows; `AUTOHEAL_PLAYWRIGHT` can point to an existing Playwright module. `tools/evaluate_local.py` records six actual Ollama runs and preserves their traces. The report builder uses `python-docx` and Pillow to rebuild the editable report from archived evidence; PDF export requires Word or LibreOffice. These authoring and verification tools are separate from the dependency-free application.
+
 See the [package reference](autoheal/README.md) for component responsibilities and API routes. Current evidence is recorded in the report and repository verification logs.
