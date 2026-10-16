@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+autoheal/runtime/
+.env
+.env.*
+!.env.example
+output/
+tmp/
+*.zip
+node_modules/
