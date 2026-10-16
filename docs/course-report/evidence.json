@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "source_commit": "e5a064a7f31ac2c452127edef850e8b99066be6f",
+  "report_date": "16 October 2026",
+  "python_version": "3.12.14",
+  "hardware": "Windows laptop; Intel Core i7-13650HX; 23.71 GiB installed usable RAM reported by Windows; NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+  "test_count": 63,
+  "test_seconds": 14.162,
+  "test_log": "docs/evidence/test-results.txt",
+  "live_summary": "docs/evidence/live-summary.json",
+  "screenshot_index": "docs/screenshots/index.json",
+  "api_live_tested": false
+}
