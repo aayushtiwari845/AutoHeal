@@ -98,10 +98,20 @@ def compact_output(value, limit=MAX_OUTPUT):
 
 def parse_error(stderr):
     lines = stderr.strip().splitlines()
-    location = re.findall(r'File "<generated>", line (\d+)', stderr)
+    locations = list(re.finditer(r'File "<generated>", line (\d+)', stderr))
+    location = int(locations[-1].group(1)) if locations else None
+    # An exception's message may span several lines. Reading only the final
+    # stderr line loses its actual type, and a bare AssertionError has no colon.
+    tail = stderr[locations[-1].end():] if locations else stderr
+    tail_lines = tail.strip().splitlines()
+    pattern = r"(?:[A-Za-z][A-Za-z0-9_]*\.)*(Exception|[A-Za-z][A-Za-z0-9_]*(?:Error|Exception)|StopIteration|StopAsyncIteration|KeyboardInterrupt|SystemExit)(?::[ \t]*(.*))?"
+    for index, line in enumerate(tail_lines):
+        match = re.fullmatch(pattern, line)
+        if match:
+            message = "\n".join([match.group(2) or ""] + tail_lines[index + 1:]).strip()
+            return {"type": match.group(1), "message": message[:1000], "line": location}
     last = lines[-1] if lines else "Python exited without a result."
-    match = re.match(r"([A-Za-z][A-Za-z0-9_]*(?:Error|Exception)):\s*(.*)", last)
-    return {"type": match.group(1) if match else "ExecutionError", "message": (match.group(2) if match else last)[:1000], "line": int(location[-1]) if location else None}
+    return {"type": "ExecutionError", "message": last[:1000], "line": location}
 
 
 def _attach_job(process):
@@ -143,7 +153,10 @@ def _attach_job(process):
 
 def _harness(code, data, trace_execution=True, trace_prefix=""):
     setup = "\n".join([
-        "import builtins, json, math, statistics, collections, re, sys",
+        # Counter.most_common(n) lazily imports heapq in the stdlib. Preload its
+        # implementation dependency before auditing without granting generated
+        # programs another import or exposing heapq in their globals.
+        "import builtins, json, math, statistics, collections, re, sys, heapq",
         "_modules = {name: globals()[name] for name in ('json', 'math', 'statistics', 'collections', 're')}",
         f"_safe = {{name: getattr(builtins, name) for name in {SAFE_BUILTINS!r}}}",
         "def _import(name, globals=None, locals=None, fromlist=(), level=0):",

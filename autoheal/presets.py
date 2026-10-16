@@ -208,7 +208,8 @@ def _mismatches(actual, expected, path="$", limit=12):
             if len(result) >= limit:
                 break
         return result[:limit]
-    return [{"path": path, "issue": "value or type differs"}]
+    kinds = {dict: "object", list: "array", str: "string", bool: "boolean", int: "number", float: "number", type(None): "null"}
+    return [{"path": path, "issue": "value or type differs", "expected_type": kinds.get(type(expected), "unsupported"), "actual_type": kinds.get(type(actual), "unsupported")}]
 
 
 def validate_result(result, preset_id):

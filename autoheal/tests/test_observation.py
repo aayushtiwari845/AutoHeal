@@ -25,6 +25,25 @@ def wait_for(manager, run_id, predicate, timeout=3):
 
 
 class ObservationTests(unittest.TestCase):
+    def test_advertised_counter_most_common_allows_its_private_stdlib_dependency(self):
+        source = "import collections\ncounts = collections.Counter(['b', 'a', 'a', 'b', 'c'])\ntop = counts.most_common(3)\nprint(json.dumps({'top': top}))"
+        result = execute_code(source, {})
+        self.assertIsNone(result["error"], result["stderr"])
+        # Counter retains encounter order for ties; the domain task remains
+        # responsible for an explicit alphabetical tie-break if required.
+        self.assertEqual(result["output"], {"top": [["b", 2], ["a", 2], ["c", 1]]})
+        denied = execute_code("import heapq\nprint('{}')", {})
+        self.assertEqual(denied["error"]["type"], "CodePolicyError")
+        self.assertIsNone(denied["returncode"])
+
+    def test_multiline_and_bare_exception_headers_keep_the_real_type(self):
+        for source, error_type, message in [("value = 1\nraise ValueError('first line\\nsecond line')", "ValueError", "first line\nsecond line"), ("value = 1\nraise Exception('problem')", "Exception", "problem"), ("value = 1\njson.loads('broken')", "JSONDecodeError", "Expecting value: line 1 column 1 (char 0)"), ("value = 1\nassert False", "AssertionError", ""), ("value = 1\nnext(iter([]))", "StopIteration", "")]:
+            with self.subTest(error_type=error_type):
+                result = execute_code(source, {})
+                self.assertEqual(result["error"]["type"], error_type)
+                self.assertEqual(result["error"]["line"], 2)
+                self.assertEqual(result["error"]["message"], message)
+
     def test_preloaded_data_cannot_be_rebound_but_read_aliases_are_allowed(self):
         for source in ["DATA = []", "DATA += [1]", "del DATA", "for DATA in [1]:\n    pass", "values = [DATA for DATA in [1, 2]]", "import math as DATA", "def f(DATA):\n    return DATA"]:
             with self.subTest(source=source):
