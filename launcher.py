@@ -15,8 +15,10 @@ URL = "http://127.0.0.1:8765"
 
 def ready():
     try:
-        with urllib.request.urlopen(URL + "/api/status", timeout=1) as response:
-            return json.load(response).get("service") == "autoheal-studio"
+        with urllib.request.urlopen(URL + "/api/status", timeout=3) as response:
+            status = json.load(response)
+        version = status.get("version")
+        return status.get("service") == "autoheal-studio" and isinstance(version, str) and version.split(".", 1)[0] == "2"
     except Exception:
         return False
 
@@ -43,7 +45,7 @@ def main():
         if process.poll() is not None:
             break
         time.sleep(0.25)
-    raise SystemExit("AutoHeal could not start. See autoheal/runtime/server.log; port 8765 may already be occupied.")
+    raise SystemExit("AutoHeal Studio v2 could not start. See autoheal/runtime/server.log. Close any older AutoHeal server or other service using port 8765, then launch again.")
 
 
 if __name__ == "__main__":

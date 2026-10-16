@@ -1,50 +1,72 @@
 # AutoHeal Studio
 
-A joint Generative AI lab project for **Aayush Kumar Tiwari (16014223003, LY AI & DS B2)** and **Prateeksha Kini (16014223061, LY AI & DS B3)**.
+A Windows 95 inspired laboratory workbench for the **Self-Correction “Code Execution & Auto-Heal” Loop**. Watch a Python candidate move through generation, execution, independent evaluation, error feedback, and repair. Every run stops at its first passing result or after at most five attempts.
 
-The dashboard exposes a complete **generate → execute → evaluate → reflect → repair** loop. Every candidate, concise technical diagnosis, stdout, stderr, exit code, execution duration, error location, and validation decision appears in an exportable JSON trace. Successful validation stops the loop immediately. Each run allows at most five attempts and each execution at most five seconds.
+**Joint Generative AI Laboratory project · LY B.Tech AI & DS · 2026–27**
 
-## Modes and honest claims
-
-- **Live local model:** Ollama generates each ordinary candidate and repair using `qwen2.5-coder:7b`. No hosted API, API key, or paid service is required. Model loading and generation can take longer than code execution; the execution timeout applies to the child Python process only.
-- **Controlled first failure:** An optional, explicitly marked broken first candidate demonstrates an exception or semantic error. The local model must generate the repaired candidate. The seeded source is never presented as model-generated code.
-- **Scripted replay:** Predetermined broken and repaired programs are really executed and validated. This provides a repeatable offline demonstration of orchestration, diagnostics, and execution. It is not evidence of model intelligence.
-- **Custom task:** A live model processes a user task and must output a non-empty JSON object. This checks execution and structure; custom answers have no independent correctness oracle.
-
-## Verified scenarios
-
-| Scenario | Controlled fault | Independent target |
+| Student | Roll number | Class |
 | --- | --- | --- |
-| Sales | Summing dirty strings raises `TypeError` | 6 valid rows; 2 rejected; total 520; North 160, South 180, West 180; tie broken alphabetically |
-| Text | Calling `lowercase()` raises `AttributeError` | 14 tokens; 7 unique; code 4, ai 3, reliable 3; stable tie ordering |
-| Grades | Unweighted means execute but fail semantic validation | Weighted averages 78, 77, 95.6, 50.5; class average 75.28; 3 passing students |
+| Aayush Kumar Tiwari | 16014223003 | LY AI & DS B2 |
+| Prateeksha Kini | 16014223061 | LY AI & DS B3 |
 
-Expected values are specified separately from candidate source and independently recalculated in the test suite. The model receives task rules and data, not the expected-answer object. Zero exit code alone never establishes preset correctness.
+[GitHub repository](https://github.com/aayushtiwari845/AutoHeal) · [Project report — PDF](docs/report/AutoHeal_Project_Report.pdf) · [Editable report — Word](docs/report/AutoHeal_Project_Report.docx)
 
-## Architecture
+![AutoHeal Studio workbench with task data, Python source, process output, and result evaluation](docs/screenshots/01-workbench-overview.png)
 
-| File | Responsibility |
-| --- | --- |
-| `server.py` | Loopback HTTP server, static dashboard, origin/host checks, run and export endpoints |
-| `engine.py` | Asynchronous state machine, bounded attempt history, stop conditions, cancellation, feedback |
-| `provider.py` | Local Ollama streaming transport; bounded repair context; concise diagnosis/code response |
-| `executor.py` | AST checks, child-only execution, audit guard, isolated temporary workspace, bounded capture |
-| `presets.py` | Public scenario definitions, independent expected results, semantic/structural validation |
-| `web/` | Minimal browser interface, code inspection, live attempt timeline, trace download |
-| `tests/test_core.py` | Independent references, executor limits, state transitions, local HTTP protections |
+## Launch on Windows
 
-The HTTP API binds to `127.0.0.1:8765`. A server on another interface is refused. `GET /api/status` identifies the service as `autoheal-studio`; `GET /api/presets` returns the three scenarios; `POST /api/runs` starts an asynchronous run; `GET /api/runs/{id}` returns a snapshot; `POST /api/runs/{id}/cancel` cancels it; `GET /api/runs/{id}/export` downloads its trace. Mutations require JSON and an accepted local host/origin. No wildcard CORS is enabled. Runs are kept only in memory and history is bounded to 40 runs with at most two active runs.
+Double-click **Launch AutoHeal.cmd**, or run this from the repository folder in PowerShell:
+
+```powershell
+& ".\Launch AutoHeal.cmd"
+```
+
+The launcher opens [the local workbench](http://127.0.0.1:8765/) and reuses only a compatible AutoHeal Studio v2 server. Python 3.10 or newer is required; the application uses the Python standard library and dependency-free browser assets. Ollama supplies the live local model; the default is `qwen2.5-coder:7b`. Scripted replay works without a model or API key. Model loading and generation take longer than execution; the five-second limit applies to each Python subprocess.
+
+## Inspect the complete loop
+
+- **Automatic** advances through Generate → Execute → Evaluate → Reflect → Repair until a stop condition is met.
+- **Step through** pauses before each server stage. **Next stage** releases one stage so its source, output, and evaluation can be inspected before continuing. The controller remains visible while scrolling during a manual run.
+- **Captured line replay** highlights real recorded CPython line events and their bounded local variables. A line event occurs **before** that line executes. This is a replay of observations, separate from manual stage control; it is not a live debugger. A captured exception can be caught by the program and does not alone establish failure.
+- The workbench exposes source with line numbers and optional wrapping, stdout/stderr, exit code, duration, expected-versus-actual result checks, concise repair diagnosis, before/after source changes, attempt navigation, and an exportable JSON trace.
+
+The optional **controlled first fault** is an explicitly labelled prewritten candidate. It is visible before a run and is never presented as model-generated source. In live mode, the model generates subsequent repairs. In **scripted replay**, both faulty and repaired candidates are predetermined; the Python executions, errors, line events, and validations are real, while no AI model is called.
+
+## Tasks and validation
+
+| Verified preset | Controlled first failure | Independent checks |
+| --- | --- | --- |
+| Weighted grades | Exit code 0, but an unweighted mean gives the wrong answer | Weighted student averages, class average, passing names, and highest student |
+| Sales summary | Summing dirty strings raises `TypeError` | Numeric cleaning, rejected rows, regional totals, and stable tie breaking |
+| Text analytics | Calling `lowercase()` raises `AttributeError` | Normalized token counts, frequencies, and stable rankings |
+
+Preset input data is fixed, and expected results are kept separate from candidate source. The model receives task rules and data, not the reference-answer object. **Exit code 0 alone never passes a preset.**
+
+Custom tasks accept instructions and optional finite JSON input, supplied to Python as `DATA`. They check successful execution and a non-empty JSON object only. Their results are labelled **structural checks** because no independent domain-correctness oracle is provided. Controlled first faults and scripted replay apply only to the verified presets.
+
+## Local model and optional API
+
+**Live Ollama** uses the local service at `127.0.0.1:11434`. Task data and repair feedback remain on the laptop for this mode. **Live API** is optional and remains disabled until its provider is configured locally. API mode sends the task, input data, candidate source, and relevant failure feedback to the selected external provider.
+
+Copy [`.env.example`](.env.example) to `.env` and fill in `AUTOHEAL_API_BASE`, `AUTOHEAL_API_MODEL`, and `AUTOHEAL_API_KEY` locally; `GROQ_API_KEY` is also accepted. The example targets the Groq compatible endpoint. Another supported provider can use an HTTPS OpenAI-compatible endpoint. Restart the server after changing `.env`; the launcher may otherwise reuse the running process. Existing environment variables take precedence.
+
+Keys are never entered in the dashboard, returned by its status API, included in run requests, or passed to generated Python. `.env` is excluded from Git. Exported traces contain task data, source, and outputs, so review their contents before sharing. Runs remain in bounded server memory until the process exits or older completed history is removed; JSON export preserves a selected trace.
 
 ## Execution boundaries
 
-This is a **defense-in-depth constrained subprocess, not a hard OS security sandbox**. It is appropriate for trusted local lab demonstrations. It must not be deployed as a public service or used to execute deliberately hostile programs. For hostile workloads, add an operating-system sandbox or container with separate user privileges, a read-only filesystem, disabled network, and resource controls.
+Generated source runs in a constrained child process with AST/import/builtin restrictions, a child audit hook, a disposable working directory, no stdin, a restricted environment, bounded output and tracing, and a maximum five-second execution timeout. File, network, and process access are disallowed by these application controls. Windows adds best-effort Job Object resource limits; each attempt reports whether those limits were active.
 
-Generated source is parsed before execution, with no execution in the parent. Only a restricted Python subset and approved numeric/text modules are available. File, network, process, introspection, private-attribute, and native-library access are denied through AST/import/builtin restrictions plus a child audit hook. Each program runs under `python -I -S` in a disposable directory with a secret-free environment allowlist and no stdin. Standard output/error are capped, repetitive lines condensed, and provider context trimmed. Invalid JSON, duplicate keys, non-finite JSON values, policy violations, timeouts, runtime errors, and semantic mismatches are explicit failures.
+This is **defense-in-depth execution control, not a hardened operating-system sandbox**. It is designed for trusted local laboratory work. Provider errors, invalid output, timeouts, policy violations, failed result checks, cancellation, and exhausted attempts remain explicit outcomes; none is converted into a fabricated success.
 
-On Windows, a best-effort Job Object adds a **384 MB process memory cap**, one-process limit, and kill-on-close behavior. The trace reports `job_limit_active` for every executed attempt rather than silently assuming the operating-system limit worked. Cancellation stops the dashboard run immediately, kills an executing child, and closes an active provider stream; the local Ollama service may briefly continue internal work while its connection is being closed. A provider failure stops the run without inventing a successful result.
+## Development checks
 
-## Verification
+Run from the repository root:
 
-`python -m unittest discover -s autoheal/tests -v`
+```powershell
+python tools/run_checks.py
+node --check autoheal/web/app.js
+```
 
-The 33-test suite verifies independent Decimal-based reference results, all three repair paths, exact exception lines, syntax errors, hangs, flooding, denied file/network/process access, JSON-format failures, cancellation races, provider failure, first-success stop, five-attempt exhaustion, semantic failures after a successful process exit, custom-validation limitations, and HTTP host/origin restrictions. It also checks that semantic feedback identifies exact failing field paths while excluding reference answers, numeric overflow cannot enter JSON exports, and cancelled unfinished workers retain their capacity and history slots until cleanup. The Python backend uses only the standard library.
+The backend suite covers independent preset references, executor restrictions, output contracts, cancellation, provider handling, manual gate tokens, recorded traces, custom data, and local HTTP protections. It uses mocked providers and needs no paid API or model access. Node is optional for the JavaScript syntax check and is not an application dependency.
+
+See the [package reference](autoheal/README.md) for component responsibilities and API routes. Current evidence is recorded in the report and repository verification logs.
