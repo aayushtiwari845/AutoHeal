@@ -72,6 +72,36 @@ class ReferenceTests(unittest.TestCase):
         self.assertNotIn("Mira", result["message"])
         self.assertNotIn("Mira", json.dumps(result["mismatches"]))
 
+        # A real candidate can print valid JSON while preserving Counter pairs
+        # as arrays instead of the task's required token/count objects.
+        source = """import re
+from collections import Counter
+tokens = re.findall('[A-Za-z]+', ' '.join(DATA).lower())
+counts = Counter(tokens)
+ranking = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))[:3]
+print(json.dumps({
+    'document_count': len(DATA),
+    'token_count': len(tokens),
+    'unique_tokens': len(counts),
+    'frequencies': counts,
+    'top_tokens': ranking,
+}))"""
+        execution = execute_code(source, PRESETS["text"]["data"])
+        self.assertIsNone(execution["error"])
+        self.assertEqual(execution["returncode"], 0)
+        validation = validate_result(execution["output"], "text")
+        self.assertFalse(validation["passed"])
+        self.assertEqual(len(validation["mismatches"]), 3)
+        for index, mismatch in enumerate(validation["mismatches"]):
+            self.assertEqual(mismatch["path"], f"$.top_tokens[{index}]")
+            self.assertEqual(mismatch["expected_type"], "object")
+            self.assertEqual(mismatch["actual_type"], "array")
+            self.assertNotIn("expected", mismatch)
+            self.assertNotIn("actual", mismatch)
+        serialized = json.dumps(validation["mismatches"])
+        for answer in ('"code"', '"ai"', '"reliable"'):
+            self.assertNotIn(answer, serialized)
+
 
 class ExecutorTests(unittest.TestCase):
     def test_all_repaired_programs_execute_and_match(self):

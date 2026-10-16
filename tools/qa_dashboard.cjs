@@ -1,7 +1,9 @@
-const { chromium } = require('C:/Users/Aayus/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+// Optional browser acceptance checks; set AUTOHEAL_PLAYWRIGHT to a bundled module path if needed.
+const { chromium } = require(process.env.AUTOHEAL_PLAYWRIGHT || 'playwright');
 const assert = require('node:assert/strict');
 (async () => {
- const browser = await chromium.launch({headless:true, executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'});
+ const edge = process.env.AUTOHEAL_EDGE || (process.platform === 'win32' ? require('node:path').join(process.env['PROGRAMFILES(X86)'] || 'C:/Program Files (x86)', 'Microsoft/Edge/Application/msedge.exe') : undefined);
+ const browser = await chromium.launch({headless:true, ...(edge ? {executablePath:edge} : {})});
  const page = await browser.newPage({viewport:{width:1366,height:768}});
  const errors=[]; page.on('pageerror',error=>errors.push(error.message)); page.on('console',msg=>{if(msg.type()==='error')errors.push(msg.text())});
  const results=[];
